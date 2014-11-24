@@ -1,0 +1,12 @@
+{
+  "manifest_version": 2,
+
+  "name": "SCPS",
+  "description": "Secure Cloud Password Splitter extension",
+  "version": "1.0",
+
+  "permissions": [
+  ],
+  "browser_action": {
+  }
+}
