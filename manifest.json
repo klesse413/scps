@@ -2,7 +2,7 @@
   "manifest_version": 2,
 
   "name": "SCPS",
-  "description": "Secure Cloud Password Splitter extension",
+  "description": "Secure Cloud Password Splitter chrome extension",
   "version": "1.0",
 
   "permissions": [
