@@ -7,6 +7,18 @@
 
   "permissions": [
   ],
+
+  "background": {
+    "scripts": ["eventPage.js"],
+    "persistent": false
+  },
+
   "browser_action": {
-  }
+      "default_icon": "resources/icon128.png"
+  },
+
+  "icons": {
+    "16": "resources/icon16.png",
+    "48": "resources/icon48.png",
+    "128": "resources/icon128.png" }
 }
