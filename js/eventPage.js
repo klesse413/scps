@@ -8,11 +8,11 @@ chrome.browserAction.onClicked.addListener(
         if (0 == 1) {
             //alert('hi');
             chrome.browserAction.setPopup({
-                popup: "src/logged_in_popup.html"
+                popup: "../html/logged_in_popup.html"
             });
         } else {
             chrome.browserAction.setPopup({
-                popup: "src/not_logged_in_popup.html"
+                popup: "../html/not_logged_in_popup.html"
             });
         }
 
