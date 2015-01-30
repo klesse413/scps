@@ -27,3 +27,7 @@ img {
     width: 30%;
     padding-bottom: 2%;
 }
+
+p {
+    float: left;
+}

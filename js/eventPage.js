@@ -1,11 +1,12 @@
 /**
- * Created by klesse on 1/27/15.
+ * author: Katelyn Lesse
+ * since: 1/27/15
  */
 
 chrome.browserAction.onClicked.addListener(
     function(tab) {
         //if (chrome.storage.sync.get("Logged_in")) {
-        if (0 == 1) {
+        if (1 == 0) {
             //alert('hi');
             chrome.browserAction.setPopup({
                 popup: "../html/logged_in_popup.html"
