@@ -12,7 +12,6 @@
     "scripts": [
       "js/eventPage.js",
       "vendor/js/dropbox.js"
-//      "js/dropbox_chrome.js"
     ],
     "persistent": false
   },

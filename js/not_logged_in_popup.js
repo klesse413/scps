@@ -4,9 +4,17 @@
  */
 
 function start_login_process() {
-    chrome.tabs.create({
-        url: "../html/redirect.html"
+    chrome.runtime.getBackgroundPage(function(eventPage) {
+        return eventPage.controller.signIn((function() {
+            return function() {
+                return null;
+            };
+        })(this));
     });
+    return false;
+    //chrome.tabs.create({
+    //    url: "../html/redirect.html"
+    //});
 }
 
 function start_signup_process() {

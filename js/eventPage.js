@@ -7,7 +7,6 @@ chrome.browserAction.onClicked.addListener(
     function(tab) {
         //if (chrome.storage.sync.get("Logged_in")) {
         if (1 == 0) {
-            //alert('hi');
             chrome.browserAction.setPopup({
                 popup: "../html/logged_in_popup.html"
             });
@@ -19,3 +18,6 @@ chrome.browserAction.onClicked.addListener(
 
     }
 );
+
+var client = new Dropbox.Client({key: "280u6tt5hujnm72"});
+
