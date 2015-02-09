@@ -1,15 +1,19 @@
 {
   "manifest_version": 2,
-
   "name": "SCPS",
   "description": "Secure Cloud Password Splitter chrome extension",
   "version": "1.0",
 
   "permissions": [
+    "storage"
   ],
 
   "background": {
-    "scripts": ["js/eventPage.js"],
+    "scripts": [
+      "js/eventPage.js",
+      "vendor/js/dropbox.js"
+//      "js/dropbox_chrome.js"
+    ],
     "persistent": false
   },
 
@@ -20,5 +24,10 @@
   "icons": {
     "16": "images/icon16.png",
     "48": "images/icon48.png",
-    "128": "images/icon128.png" }
+    "128": "images/icon128.png"
+  },
+
+  "web_accessible_resources": [
+    "html/dbox_oauth_receiver.html"
+  ]
 }

@@ -4,7 +4,9 @@
  */
 
 function start_login_process() {
-    alert("login process");
+    chrome.tabs.create({
+        url: "../html/redirect.html"
+    });
 }
 
 function start_signup_process() {
@@ -20,7 +22,7 @@ function init() {
     } else if(login_button.attachEvent){
         login_button.attachEvent("onclick", start_login_process);
     }
-    
+
     if(signup_button.addEventListener){
         signup_button.addEventListener("click", start_signup_process, false);
     } else if(signup_button.attachEvent){
