@@ -1,4 +1,5 @@
 {
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA9SmanhZg2ilQQakgabKoOMxl4VvS93YPrnW317stA4OW7QJJ4MSaqPlycA+PhyMslug8L9EnVc99aHJlU9gCxdRp2rx8RP4efeT2huzpCfIUAYoL7smES3prxWbHU4aZVgThi8AK27LN2gGMfiFsReCx0a0hHeEkyX4KQa8geu/QBWcI61HH3I6e3wgsAepCww7sHdQgWnr++L1VprvzQS9Mm0tRrN2cUC0FLnxGNydREAOspSkabHpSfYee+fYpWsChyD/gvA8Ba8gnRQVImQrgaHkJ8DVcOwtY9JDbBxyKFE4T0ciIjS8SCmvs65z3r3JKqjzGTBg4UBIyUO4SEwIDAQAB",
   "manifest_version": 2,
   "name": "SCPS",
   "description": "Secure Cloud Password Splitter chrome extension",
