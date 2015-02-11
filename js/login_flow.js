@@ -65,18 +65,24 @@ var showError = function(error) {
     }
 };
 
-function flow() {
+function checkSuccessful() {
     if (localStorage["successful"] >= t) {
         localStorage["logged_in"] = 1;
         window.open({
             url: "/html/home.html"
         });
-        return;
     }
+}
+
+function flow() {
+
+    checkSuccessful();
 
     if (localStorage["got_here_from"] == "login") {
         dbox_auth_flow();
     }
+
+    checkSuccessful();
 
     if (localStorage["got_here_from"] == "dbox") {
         gdrive_auth_flow();
