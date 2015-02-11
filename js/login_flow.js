@@ -6,33 +6,21 @@
 var t = 3; // for now ..
 
 function dbox_auth_flow() {
-    var client = new Dropbox.Client({key: "280u6tt5hujnm72"});
-    client.authDriver(new Dropbox.AuthDriver.ChromeExtension({
-        receiverPath: '/html/dbox_oauth_receiver.html'
-    }));
+
+    var client = DBOX_CLIENT;
+
     client.authenticate(function(error, client) {
         if (error) {
-            // Replace with a call to your own error-handling code.
-            //
-            // Don't forget to return from the callback, so you don't execute the code
-            // that assumes everything went well.
             return showError(error);
         }
-
-        // Replace with a call to your own application code.
-        //
-        // The user authorized your app, and everything went well.
-        // client is a Dropbox.Client instance that you can use to make API calls.
-        // doSomethingCool(client);
-
-        client.getAccountInfo(function(error, accountInfo) {
-            if (error) {
-                return showError(error);  // Something went wrong.
-            }
-
-            alert("Hello, " + accountInfo.name + "!");
-        });
     });
+
+    localStorage["got_here_from"] = "dbox";
+    localStorage["successful"]++;
+}
+
+function gdrive_auth_flow() {
+
 }
 
 var showError = function(error) {
@@ -77,14 +65,23 @@ var showError = function(error) {
     }
 };
 
-var dbox_token = null;
-if (localStorage["dbox_token"] != null) {
-    if (localStorage["dbox_token"].length > 0) {
-        dbox_token = localStorage["dbox_token"];
+function flow() {
+    if (localStorage["successful"] >= t) {
+        localStorage["logged_in"] = 1;
+        window.open({
+            url: "/html/home.html"
+        });
+        return;
     }
-} else {
-    // in future, will need to know if already tried dbox and failed
-    // for now, just seeing if can get this working
-    dbox_auth_flow();
 
+    if (localStorage["got_here_from"] == "login") {
+        dbox_auth_flow();
+    }
+
+    if (localStorage["got_here_from"] == "dbox") {
+        gdrive_auth_flow();
+    }
 }
+
+
+flow();
