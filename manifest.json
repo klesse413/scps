@@ -11,10 +11,9 @@
 
   "background": {
     "scripts": [
-      "js/eventPage.js",
-      "vendor/js/dropbox.js"
+      "js/eventPage.js"
     ],
-    "persistent": false
+    "persistent": true
   },
 
   "browser_action": {
@@ -29,5 +28,7 @@
 
   "web_accessible_resources": [
     "html/dbox_oauth_receiver.html"
-  ]
+  ],
+
+  "content_security_policy": "script-src 'self' https://apis.google.com; object-src 'self'"
 }

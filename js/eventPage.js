@@ -5,7 +5,8 @@
 
 chrome.browserAction.onClicked.addListener(
     function(tab) {
-        if (localStorage["logged_in"] == null) {
+
+        if (localStorage.getItem("logged_in") === null) {
             chrome.browserAction.setPopup({
                 popup: "/html/not_logged_in_popup.html"
             });

@@ -11,13 +11,13 @@ function start_login_process() {
     });
 }
 
-function start_signup_process() {
-    alert("signup process");
-}
+//function start_signup_process() {
+//    alert("signup process");
+//}
 
 function init() {
     var login_button = document.getElementById("login");
-    var signup_button = document.getElementById("signup");
+    //var signup_button = document.getElementById("signup");
 
     if(login_button.addEventListener){
         login_button.addEventListener("click", start_login_process, false);
@@ -25,11 +25,11 @@ function init() {
         login_button.attachEvent("onclick", start_login_process);
     }
 
-    if(signup_button.addEventListener){
-        signup_button.addEventListener("click", start_signup_process, false);
-    } else if(signup_button.attachEvent){
-        signup_button.attachEvent("onclick", start_signup_process);
-    }
+    //if(signup_button.addEventListener){
+    //    signup_button.addEventListener("click", start_signup_process, false);
+    //} else if(signup_button.attachEvent){
+    //    signup_button.attachEvent("onclick", start_signup_process);
+    //}
 }
 
 if(window.addEventListener) {

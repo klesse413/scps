@@ -3,7 +3,7 @@
  * since: 2/9/15
  */
 
-var t = 3; // for now ..
+var t = 4; // for now ..
 
 function dbox_auth_flow() {
 
@@ -17,10 +17,20 @@ function dbox_auth_flow() {
 
     localStorage["got_here_from"] = "dbox";
     localStorage["successful"]++;
+    //window.close();
+    //window.open("redirect.html");
 }
 
 function gdrive_auth_flow() {
 
+    handleClientLoad();
+
+    localStorage["got_here_from"] = "gdrive";
+    localStorage["successful"]++;
+    //window.close();
+    //window.open("redirect.html");
+    console.log("successful: " + localStorage["successful"]);
+    console.log("got_here_from: " + localStorage["got_here_from"]);
 }
 
 var showError = function(error) {
@@ -85,6 +95,12 @@ function flow() {
     checkSuccessful();
 
     if (localStorage["got_here_from"] == "dbox") {
+        gdrive_auth_flow();
+    }
+
+    checkSuccessful();
+
+    if (localStorage["got_here_from"] == "gdrive") {
         gdrive_auth_flow();
     }
 }
