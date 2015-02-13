@@ -33,6 +33,10 @@ function gdrive_auth_flow() {
     console.log("got_here_from: " + localStorage["got_here_from"]);
 }
 
+function onedrive_auth_flow() {
+    
+}
+
 var showError = function(error) {
     switch (error.status) {
         case Dropbox.ApiError.INVALID_TOKEN:
@@ -101,7 +105,7 @@ function flow() {
     checkSuccessful();
 
     if (localStorage["got_here_from"] == "gdrive") {
-        gdrive_auth_flow();
+        onedrive_auth_flow();
     }
 }
 
