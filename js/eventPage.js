@@ -24,7 +24,6 @@
         EventPageController.prototype.onBrowserAction = function() {
             return (function() {
                 if (localStorage.getItem("logged_in") === null) {
-                    alert("hi");
                     chrome.browserAction.setPopup({
                         popup: "/html/not_logged_in_popup.html"
                     });

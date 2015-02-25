@@ -8,14 +8,14 @@
         function Chrome(clientOptions) {
             this.clientOptions = clientOptions;
             this.client = new Dropbox.Client(this.clientOptions);
-            client.authDriver(new Dropbox.AuthDriver.ChromeExtension({
+            this.client.authDriver(new Dropbox.AuthDriver.ChromeExtension({
                 receiverPath: '/html/dbox_oauth_receiver.html'
             }));
         }
 
         Chrome.prototype.auth = function() {
-            //alert("auth");
             if (this.client.isAuthenticated()) {
+                localStorage["got_here_from"] = "dbox";
                 return true;
             } else {
                 this.client.authenticate(function(error, client) {
@@ -30,7 +30,6 @@
             }
         };
 
-        //alert("hi");
         return Chrome;
 
     })();
