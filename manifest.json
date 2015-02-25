@@ -11,9 +11,11 @@
 
   "background": {
     "scripts": [
+      "vendor/js/dropbox.js",
+      "js/dbox.js",
       "js/eventPage.js"
     ],
-    "persistent": true
+    "persistent": false
   },
 
   "browser_action": {
