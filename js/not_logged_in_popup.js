@@ -4,8 +4,8 @@
  */
 
 function start_login_process() {
-    localStorage["successful"] = 0;
-    localStorage["got_here_from"] = "login";
+    localStorage.setItem("successful", 0);
+    localStorage.setItem("got_here_from", "login");
     chrome.tabs.create({
         url: "/html/redirect.html"
     });

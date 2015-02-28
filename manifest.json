@@ -12,6 +12,7 @@
   "background": {
     "scripts": [
       "vendor/js/dropbox.js",
+      "vendor/js/google_api.js",
       "js/dbox.js",
       "js/eventPage.js"
     ],

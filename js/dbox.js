@@ -13,25 +13,37 @@
             }));
         }
 
-        Chrome.prototype.auth = function() {
-            if (this.client.isAuthenticated()) {
-                localStorage["got_here_from"] = "dbox";
-                return true;
-            } else {
-                this.client.authenticate(function(error, client) {
+        Chrome.prototype.auth = function () {
+            //return (function() {
+            if (!this.client.isAuthenticated()) {
+                this.client.authenticate(function (error) {
                     if (error) {
+                        //return (function() {
                         //return showError(error);
-                        return false;
+                        //console.log(error)
+                        //localStorage.setItem("got_here_from", "dbox");
+                        //}());
+                    } else {
+                        //return (function() {
+                        //localStorage.setItem("got_here_from", "dbox");
+                        //localStorage.setItem("successful", parseInt(localStorage.getItem("successful")) + 1);
+
+                        //}());
+
+
+
+
+                        // EVENTUALLY FIND A WAY TO MAKE THIS STUFF WORK
+
+
                     }
                 });
 
-                localStorage["got_here_from"] = "dbox";
-                localStorage["successful"]++;
+                //});
             }
         };
 
         return Chrome;
-
-    })();
+    });
 
 }).call(this);
