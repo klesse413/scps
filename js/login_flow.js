@@ -30,11 +30,14 @@
     var t = 2;
 
     var checkSuccessful = function() {
+        console.log(localStorage.getItem("got_here_from"));
+        console.log(localStorage.getItem("successful"));
         if (localStorage.getItem("successful") >= t) {
             localStorage.setItem("logged_in", 1);
-            window.open({
-                url: "/html/home.html"
+            chrome.browserAction.setPopup({
+                popup: "/html/logged_in_popup.html"
             });
+            window.location.replace("/html/home.html");
         }
     };
 
