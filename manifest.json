@@ -6,13 +6,19 @@
   "version": "1.0",
 
   "permissions": [
-    "storage"
+    "downloads",
+    "identity",
+    "storage",
+    "https://*.box.com/*",
+    "https://*.boxcdn.com/*",
+    "https://*.boxcdn.net/*",
+    "https://*.boxcloud.com/*"
   ],
 
   "background": {
     "scripts": [
       "vendor/js/dropbox.js",
-      "vendor/js/google_api.js",
+      "vendor/js/jquery-1.11.2.min.js",
       "js/dbox.js",
       "js/eventPage.js"
     ],
@@ -30,7 +36,8 @@
   },
 
   "web_accessible_resources": [
-    "html/dbox_oauth_receiver.html"
+    "html/dbox_oauth_receiver.html",
+    "html/box_oauth_receiver.html"
   ],
 
   "content_security_policy": "script-src 'self' https://apis.google.com; object-src 'self'"
