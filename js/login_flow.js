@@ -12,6 +12,8 @@
 
 //(function() {
 
+
+
     var GDRVIE_CLIENT_ID = '442923093210-o3kc4mvfqnh53cut30o67trg6icntvc9.apps.googleusercontent.com';
     var GDRIVE_SCOPES = 'https://www.googleapis.com/auth/drive';
     var GDRIVE_API_KEY = 'AIzaSyBBRU-UpTpyEWJkdfe1hx6n2tvNEEii9hk';
@@ -25,6 +27,21 @@
         var url_with_params = BOX_URL + "?redirect_uri=" + BOX_REDIRECT_URI + "&response_type=code&client_id=" + BOX_CLIENT_ID
             + "&state=blah";
         window.location.replace(url_with_params);
+    }
+
+    function dbox_auth_flow() {
+        if (!dbox_client.isAuthenticated()) {
+            dbox_client.authenticate(function (error) {
+                if (error) {
+                    console.log(error);
+                } else  {
+
+                }
+                localStorage.setItem("got_here_from", "dbox");
+                localStorage.setItem("successful", parseInt(localStorage.getItem("successful")) + 1);
+                location.reload();
+            });
+        }
     }
 
     var t = 2;
@@ -46,11 +63,12 @@
         checkSuccessful();
 
         if (localStorage.getItem("got_here_from") == "login") {
-            chrome.runtime.getBackgroundPage(function(eventPage) {
-                eventPage.controller.dbox_chrome.auth();
-            });
-            localStorage.setItem("got_here_from", "dbox");
-            localStorage.setItem("successful", parseInt(localStorage.getItem("successful")) + 1)
+            //chrome.runtime.getBackgroundPage(function(eventPage) {
+            //    eventPage.controller.dbox_chrome.auth();
+            //});
+            //localStorage.setItem("got_here_from", "dbox");
+            //localStorage.setItem("successful", parseInt(localStorage.getItem("successful")) + 1);
+            dbox_auth_flow();
         }
 
         checkSuccessful();

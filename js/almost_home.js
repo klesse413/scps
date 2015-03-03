@@ -9,14 +9,12 @@
 //if yes then go home
 
 function didntExist() {
-    var shares = secrets.share(secrets.random(256), t, 2);
+    var shares = secrets.share(secrets.random(256), 2, 2);
     // put one share on dbox
-    chrome.runtime.getBackgroundPage(function(eventPage) {
-        eventPage.controller.dbox_chrome.client.writeFile("SCPS/share.txt", shares[0], function(error, stat) {
-            if (error) {
-                return console.log(error);
-            }
-        });
+    dbox_client.writeFile("share.txt", shares[0], function(error, stat) {
+        if (error) {
+            return console.log(error);
+        }
     });
 
     // put one share on box
@@ -35,7 +33,7 @@ function didntExist() {
         processData: false,
         contentType: false,
         data: shares[1]
-    }).complete(function ( data ) {
+    }).complete(function (data) {
         // Log the JSON response to prove this worked
         console.log(data.responseText);
     });
@@ -50,19 +48,25 @@ function didntExist() {
 
     //encrypt it, upload it
     CryptoJS.AES.encrypt(binaryArray, secrets.combine(shares[0], shares[1]));
-    
+
 
 }
 
+if (!dbox_client.isAuthenticated()) {
+    dbox_client.authenticate(function (error) {
+        if (error) {
+            console.log(error);
+        }
+        dbox_client.readFile("SCPS/pwdb", null, function (error, data) {
+            if (error) {
+                console.log(error);
+                return didntExist();
+            }
+            window.location.replace("/html/home.html");
+
+        });
+    });
+}
 
 
-client.readFile("SCPS/pwdb", function(error, data) {
-    if (error) {
-        return console.log(error);
-    }
-
-    if (data == null) {
-        return didntExist();
-    }
-});
 
