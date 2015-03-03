@@ -17,37 +17,67 @@ function didntExist() {
         }
     });
 
+    // first need to create folder in box
+    var folderUrl = "https://api.box.com/2.0/folders";
+
     // put one share on box
     var uploadUrl = 'https://upload.box.com/api/2.0/files/content';
 
-    // The Box OAuth 2 Header. Add your access token.
+    // The Box OAuth 2 Header
     var headers = {
-        Authorization: localStorage.getItem("box_access_token")
+        Authorization: 'Bearer ' + localStorage.getItem("box_access_token")
     };
 
     $.ajax({
-        url: uploadUrl,
+        url: folderUrl,
         headers: headers,
         type: 'POST',
         // This prevents JQuery from trying to append the form as a querystring
         processData: false,
         contentType: false,
-        data: shares[1]
+        data: '{"name":"SCPS", "parent":{"id":"0"}}'
     }).complete(function (data) {
         // Log the JSON response to prove this worked
-        console.log(data.responseText);
+        var result = JSON.parse(data.responseText);
+        console.log(result.id);
+        localStorage.setItem("box_scps_folder_id", result.id);
+
+
+        //console.log(localStorage.getItem("box_scps_folder_id"));
+
+        var blob = new Blob([shares[1]], {type: "text/plain;charset=utf-8"});
+        var form = new FormData();
+        form.append('file', blob);
+        form.append('attributes', '{"name": "share.txt", "parent":{"id":"' + localStorage.getItem("box_scps_folder_id") + '"}}');
+        //form.append('parent_id', localStorage.getItem("box_scps_folder_id"));
+        //form.append('name', 'share.txt');
+
+        $.ajax({
+            url: uploadUrl,
+            headers: headers,
+            type: 'POST',
+            // This prevents JQuery from trying to append the form as a querystring
+            processData: false,
+            contentType: false,
+            data: form
+        }).complete(function (data) {
+            // Log the JSON response to prove this worked
+            console.log(data.responseText);
+        });
     });
 
 
-    // create empty pwdb
-    var sql = window.SQL;
-    var pwdb = new sql.Database();
-    var sqlstr = "CREATE TABLE pws ()";
-    pwdb.run(sqlstr);
-    var binaryArray = pwdb.export();
 
-    //encrypt it, upload it
-    CryptoJS.AES.encrypt(binaryArray, secrets.combine(shares[0], shares[1]));
+
+    //// create empty pwdb
+    //var sql = window.SQL;
+    //var pwdb = new sql.Database();
+    //var sqlstr = "CREATE TABLE pws ()";
+    //pwdb.run(sqlstr);
+    //var binaryArray = pwdb.export();
+    //
+    ////encrypt it, upload it
+    //CryptoJS.AES.encrypt(binaryArray, secrets.combine(shares[0], shares[1]));
 
 
 }
@@ -59,7 +89,7 @@ if (!dbox_client.isAuthenticated()) {
         }
         dbox_client.readFile("SCPS/pwdb", null, function (error, data) {
             if (error) {
-                console.log(error);
+                //console.log(error);
                 return didntExist();
             }
             window.location.replace("/html/home.html");
