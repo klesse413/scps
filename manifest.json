@@ -40,5 +40,5 @@
     "html/box_oauth_receiver.html"
   ],
 
-  "content_security_policy": "script-src 'self' https://apis.google.com; object-src 'self'"
+  "content_security_policy": "script-src 'self' https://apis.google.com 'unsafe-eval'; object-src 'self'"
 }

@@ -39,7 +39,6 @@ function didntExist() {
     }).complete(function (data) {
         // Log the JSON response to prove this worked
         var result = JSON.parse(data.responseText);
-        console.log(result.id);
         localStorage.setItem("box_scps_folder_id", result.id);
 
 
@@ -62,22 +61,29 @@ function didntExist() {
             data: form
         }).complete(function (data) {
             // Log the JSON response to prove this worked
-            console.log(data.responseText);
+            //console.log(data.responseText);
+
+            // create empty pwdb
+            var sql = window.SQL;
+            var pwdb = new sql.Database();
+            var sqlstr = "CREATE TABLE Pws (id int, name varchar(255), url varchar(1000), password varchar(255))";
+            pwdb.run(sqlstr);
+            binaryArray = new Uint8Array(pwdb.export());
+            var buf = String.fromCharCode.apply(null, binaryArray);
+
+            //encrypt it, upload it
+            console.log(secrets.combine([shares[0], shares[1]]));
+            console.log(buf);
+            var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([shares[0], shares[1]]));
+            dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
+                if (error) {
+                    return console.log(error);
+                }
+                window.location.replace("/html/home.html");
+            });
         });
+
     });
-
-
-
-
-    //// create empty pwdb
-    //var sql = window.SQL;
-    //var pwdb = new sql.Database();
-    //var sqlstr = "CREATE TABLE pws ()";
-    //pwdb.run(sqlstr);
-    //var binaryArray = pwdb.export();
-    //
-    ////encrypt it, upload it
-    //CryptoJS.AES.encrypt(binaryArray, secrets.combine(shares[0], shares[1]));
 
 
 }
@@ -87,7 +93,7 @@ if (!dbox_client.isAuthenticated()) {
         if (error) {
             console.log(error);
         }
-        dbox_client.readFile("SCPS/pwdb", null, function (error, data) {
+        dbox_client.readFile("SCPS/encDB", null, function (error, data) {
             if (error) {
                 //console.log(error);
                 return didntExist();
