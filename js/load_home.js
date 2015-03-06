@@ -3,6 +3,43 @@
  * since: 3/2/15
  */
 
+function goHome(encryptedDb) {
+    var s = [];
+    dbox_client.readFile("share.txt", null, function (error, data) {
+        if (error) {
+            return didntExist();
+        }
+        s[0] = data;
+        var headers = {
+            Authorization: 'Bearer ' + localStorage.getItem("box_access_token")
+        };
+        var downloadURL = "https://api.box.com/2.0/files/" + localStorage.getItem("box_scps_share_file_id") + "/content";
+        $.ajax({
+            url: downloadURL,
+            headers: headers,
+            type: 'GET',
+            processData: false,
+            contentType: false
+        }).complete(function(data) {
+            s[1] = data.responseText;
+            var decDb = CryptoJS.AES.decrypt(encryptedDb, secrets.combine([s[0], s[1]]));
+            var result = [];
+            for (var i = 0; i < decDb.length; i++) {
+                result.push(decDb.charCodeAt(i));
+            }
+            var sql = window.SQL;
+            //var Uints = new Uint8Array(decDb);
+            //console.log(Uints);
+            //var pwdb = new sql.Database(Uints);
+            var pwdb = new sql.Database(result);
+            console.log(pwdb);
+            if (pwdb.exec("SELECT * FROM Pws WHERE id=0") == null) {
+
+            }
+        });
+    });
+}
+
 //check if db file exists in dbox
     // in future, if not, check if exists in box or whichever other backup
 // if not then generate key and create it
@@ -37,12 +74,8 @@ function didntExist() {
         contentType: false,
         data: '{"name":"SCPS", "parent":{"id":"0"}}'
     }).complete(function (data) {
-        // Log the JSON response to prove this worked
         var result = JSON.parse(data.responseText);
         localStorage.setItem("box_scps_folder_id", result.id);
-
-
-        //console.log(localStorage.getItem("box_scps_folder_id"));
 
         var blob = new Blob([shares[1]], {type: "text/plain;charset=utf-8"});
         var form = new FormData();
@@ -60,31 +93,30 @@ function didntExist() {
             contentType: false,
             data: form
         }).complete(function (data) {
-            // Log the JSON response to prove this worked
-            //console.log(data.responseText);
-
+            var result = JSON.parse(data.responseText);
+            console.log(data.responseText);
+            localStorage.setItem("box_scps_share_file_id", result.entries[result.total_count - 1].id);
             // create empty pwdb
             var sql = window.SQL;
             var pwdb = new sql.Database();
             var sqlstr = "CREATE TABLE Pws (id int, name varchar(255), url varchar(1000), password varchar(255))";
             pwdb.run(sqlstr);
-            binaryArray = new Uint8Array(pwdb.export());
-            var buf = String.fromCharCode.apply(null, binaryArray);
+            //binaryArray = new Uint8Array(pwdb.export());
+            //var buf = String.fromCharCode.apply(null, binaryArray);
+            var buf = String.fromCharCode.apply(null, pwdb.export());
 
             //encrypt it, upload it
-            console.log(secrets.combine([shares[0], shares[1]]));
-            console.log(buf);
             var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([shares[0], shares[1]]));
             dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
                 if (error) {
                     return console.log(error);
                 }
-                window.location.replace("/html/home.html");
+                //window.location.replace("/html/home.html");
+                return goHome(encryptedDb);
             });
         });
 
     });
-
 
 }
 
@@ -93,13 +125,11 @@ if (!dbox_client.isAuthenticated()) {
         if (error) {
             console.log(error);
         }
-        dbox_client.readFile("SCPS/encDB", null, function (error, data) {
+        dbox_client.readFile("encDB", null, function (error, data) {
             if (error) {
-                //console.log(error);
                 return didntExist();
             }
-            window.location.replace("/html/home.html");
-
+            return goHome(data);
         });
     });
 }

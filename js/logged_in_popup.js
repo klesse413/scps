@@ -5,7 +5,7 @@
 
 function go_home() {
     chrome.tabs.create({
-        url: "/html/almost_home.html"
+        url: "/html/home.html"
     });
 }
 

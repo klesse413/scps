@@ -54,7 +54,7 @@
             chrome.browserAction.setPopup({
                 popup: "/html/logged_in_popup.html"
             });
-            window.location.replace("/html/almost_home.html");
+            window.location.replace("/html/home.html");
         }
     };
 
