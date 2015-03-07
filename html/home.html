@@ -49,16 +49,23 @@
         </div><!-- /.container-fluid -->
     </nav>
 
-    <!--<div id="pws-container">-->
+    <div id="pws-container">
         <div id="noPws">
             <h1>Looks like you haven't saved any passwords yet.</h1>
-            <button type="button" class="btn btn-lg btn-default">Click here to get started!</button>
+            <button type="button" class="btn btn-lg btn-default" id="getStarted">Click here to get started!</button>
         </div>
         <div id="Pws">
-
+            <h1>Passwords yay</h1>
         </div>
-    <!--</div>-->
+    </div>
 
+    <form class="form-add-entry">
+        <input type="text" class="input-block-level" name="name" placeholder="Name of Entry">
+        <input type="text" class="input-block-level" name="url" placeholder="URL">
+        <input type="text" class="input-block-level" name="user" placeholder="Username">
+        <input type="text" class="input-block-level" name="pw" placeholder="Password">
+        <button id="addEntry" class="btn btn-outline-inverse btn-lg btn-default" type="submit" value="Submit">Add Entry</button>
+    </form>
 
 
     <script src="/vendor/bootstrap/js/bootstrap.js"></script>

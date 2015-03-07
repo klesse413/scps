@@ -3,6 +3,31 @@
  * since: 3/2/15
  */
 
+function addPw(pwdb) {
+    $('.form-add-entry').css("display", "block");
+    $('#pws-container').fadeOut(100);
+    $('form-add-entry').on('submit', function() {
+        var addEntryStr = "INSERT"
+    });
+}
+
+function homeFree(pwdb) {
+    if ((pwdb.exec("SELECT * FROM Pws WHERE id=0")).length == 0) {
+
+        document.getElementById("noPws").style.display = "block";
+
+        var get_started_button = document.getElementById("getStarted");
+        if(get_started_button.addEventListener){
+            get_started_button.addEventListener("click", addPw(pwdb), false);
+        } else if(get_started_button.attachEvent){
+            get_started_button.attachEvent("onclick", addPw(pwdb));
+        }
+
+    } else {
+        document.getElementById("Pws").style.display = "block";
+    }
+}
+
 function goHome(encryptedDb) {
     var s = [];
     dbox_client.readFile("share.txt", null, function (error, data) {
@@ -23,19 +48,15 @@ function goHome(encryptedDb) {
         }).complete(function(data) {
             s[1] = data.responseText;
             var decDb = CryptoJS.AES.decrypt(encryptedDb, secrets.combine([s[0], s[1]]));
-            var result = [];
-            for (var i = 0; i < decDb.length; i++) {
-                result.push(decDb.charCodeAt(i));
+            decDb = decDb.toString(CryptoJS.enc.Utf8);
+            var buf = new ArrayBuffer(decDb.length*2); // 2 bytes for each char
+            var bufView = new Uint16Array(buf);
+            for (var i=0, strLen=decDb.length; i<strLen; i++) {
+                bufView[i] = decDb.charCodeAt(i);
             }
             var sql = window.SQL;
-            //var Uints = new Uint8Array(decDb);
-            //console.log(Uints);
-            //var pwdb = new sql.Database(Uints);
-            var pwdb = new sql.Database(result);
-            console.log(pwdb);
-            if (pwdb.exec("SELECT * FROM Pws WHERE id=0") == null) {
-
-            }
+            var pwdb = new sql.Database(bufView);
+            return homeFree(pwdb);
         });
     });
 }
@@ -81,8 +102,6 @@ function didntExist() {
         var form = new FormData();
         form.append('file', blob);
         form.append('attributes', '{"name": "share.txt", "parent":{"id":"' + localStorage.getItem("box_scps_folder_id") + '"}}');
-        //form.append('parent_id', localStorage.getItem("box_scps_folder_id"));
-        //form.append('name', 'share.txt');
 
         $.ajax({
             url: uploadUrl,
@@ -94,30 +113,24 @@ function didntExist() {
             data: form
         }).complete(function (data) {
             var result = JSON.parse(data.responseText);
-            console.log(data.responseText);
             localStorage.setItem("box_scps_share_file_id", result.entries[result.total_count - 1].id);
             // create empty pwdb
             var sql = window.SQL;
             var pwdb = new sql.Database();
-            var sqlstr = "CREATE TABLE Pws (id int, name varchar(255), url varchar(1000), password varchar(255))";
+            var sqlstr = "CREATE TABLE Pws(id int, name varchar(255), url varchar(1000), password varchar(255))";
             pwdb.run(sqlstr);
-            //binaryArray = new Uint8Array(pwdb.export());
-            //var buf = String.fromCharCode.apply(null, binaryArray);
             var buf = String.fromCharCode.apply(null, pwdb.export());
-
             //encrypt it, upload it
             var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([shares[0], shares[1]]));
             dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
                 if (error) {
                     return console.log(error);
                 }
-                //window.location.replace("/html/home.html");
                 return goHome(encryptedDb);
             });
         });
 
     });
-
 }
 
 if (!dbox_client.isAuthenticated()) {
@@ -133,6 +146,3 @@ if (!dbox_client.isAuthenticated()) {
         });
     });
 }
-
-
-
