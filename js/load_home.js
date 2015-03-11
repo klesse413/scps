@@ -3,25 +3,40 @@
  * since: 3/2/15
  */
 
-function addPw(pwdb) {
-    $('.form-add-entry').css("display", "block");
+function addPw(pwdb, s) {
+    var formSelector = $('.form-add-entry');
+    formSelector.css("display", "block");
     $('#pws-container').fadeOut(100);
-    $('form-add-entry').on('submit', function() {
-        var addEntryStr = "INSERT"
+    formSelector.on('submit', function() {
+        //var addEntryStr = "INSERT OR REPLACE INTO Pws (id, name, url, username, password) VALUES (NULL, ";
+        var addEntryStr = "INSERT OR REPLACE INTO Pws VALUES (NULL, \"";
+        addEntryStr += $('.form-add-entry input[name=name]').val() + "\", \"";
+        addEntryStr += $('.form-add-entry input[name=url]').val() + "\", \"";
+        addEntryStr += $('.form-add-entry input[name=user]').val() + "\", \"";
+        addEntryStr += $('.form-add-entry input[name=pw]').val() + "\");";
+        pwdb.exec(addEntryStr);
+        var buf = String.fromCharCode.apply(null, pwdb.export());
+        var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([s[0], s[1]]));
+        dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
+            if (error) {
+                return console.log(error);
+            }
+            formSelector.css("display", "none");
+            $('#pws-container').fadeIn(100);
+            return homeFree(pwdb, s);
+        });
     });
 }
 
-function homeFree(pwdb) {
-    if ((pwdb.exec("SELECT * FROM Pws WHERE id=0")).length == 0) {
+function homeFree(pwdb, s) {
+    console.log(pwdb.exec("SELECT * FROM Pws").length);
+    if ((pwdb.exec("SELECT * FROM Pws")).length == 0) {
 
         document.getElementById("noPws").style.display = "block";
 
-        var get_started_button = document.getElementById("getStarted");
-        if(get_started_button.addEventListener){
-            get_started_button.addEventListener("click", addPw(pwdb), false);
-        } else if(get_started_button.attachEvent){
-            get_started_button.attachEvent("onclick", addPw(pwdb));
-        }
+        $('#getStarted').click(function() {
+            return addPw(pwdb, s);
+        });
 
     } else {
         document.getElementById("Pws").style.display = "block";
@@ -56,7 +71,7 @@ function goHome(encryptedDb) {
             }
             var sql = window.SQL;
             var pwdb = new sql.Database(bufView);
-            return homeFree(pwdb);
+            return homeFree(pwdb, s);
         });
     });
 }
@@ -117,7 +132,7 @@ function didntExist() {
             // create empty pwdb
             var sql = window.SQL;
             var pwdb = new sql.Database();
-            var sqlstr = "CREATE TABLE Pws(id int, name varchar(255), url varchar(1000), password varchar(255))";
+            var sqlstr = "CREATE TABLE Pws(id INTEGER PRIMARY KEY, name varchar(255), url varchar(1000), username varchar(255), password varchar(255))";
             pwdb.run(sqlstr);
             var buf = String.fromCharCode.apply(null, pwdb.export());
             //encrypt it, upload it

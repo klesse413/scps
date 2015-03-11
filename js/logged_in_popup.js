@@ -16,6 +16,13 @@ function start_signout_process() {
     localStorage.setItem("logged_in", 0);
     localStorage.setItem("successful", 0);
     localStorage.setItem("got_here_from", "login");
+    localStorage.setItem("box_access_token", null);
+    localStorage.setItem("box_refresh_token", null);
+    localStorage.setItem("box_scps_folder_id", null);
+    localStorage.setItem("box_scps_share_file_id", null);
+    //dbox_client.signOut(null, function() {
+    //    window.close();
+    //});
     window.close();
 }
 
