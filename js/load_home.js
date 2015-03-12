@@ -6,7 +6,7 @@
 function addPw(pwdb, s) {
     var formSelector = $('.form-add-entry');
     formSelector.css("display", "block");
-    $('#pws-container').fadeOut(100);
+    $('#pws-container').fadeOut(1000);
     formSelector.on('submit', function() {
         //var addEntryStr = "INSERT OR REPLACE INTO Pws (id, name, url, username, password) VALUES (NULL, ";
         var addEntryStr = "INSERT OR REPLACE INTO Pws VALUES (NULL, \"";
@@ -21,16 +21,19 @@ function addPw(pwdb, s) {
             if (error) {
                 return console.log(error);
             }
+            // FOR SOME REASON, NEED TO DO THIS IN ORDER FOR ROW TO SHOW UP
+            var blah = pwdb.exec("SELECT * FROM Pws");
+
             formSelector.css("display", "none");
-            $('#pws-container').fadeIn(100);
+            $('#pws-container').fadeIn(1000);
             return homeFree(pwdb, s);
         });
     });
 }
 
 function homeFree(pwdb, s) {
-    console.log(pwdb.exec("SELECT * FROM Pws").length);
-    if ((pwdb.exec("SELECT * FROM Pws")).length == 0) {
+    var numEntries = pwdb.exec("SELECT * FROM Pws").length;
+    if (numEntries == 0) {
 
         document.getElementById("noPws").style.display = "block";
 
@@ -40,6 +43,41 @@ function homeFree(pwdb, s) {
 
     } else {
         document.getElementById("Pws").style.display = "block";
+
+        var selectStmt = pwdb.prepare("SELECT * FROM Pws");
+        var data = [];
+        while (selectStmt.step()) {
+            var row = selectStmt.getAsObject();
+            data.push({
+                "name": row["name"],
+                "url":row["url"],
+                "username":row["username"]
+            });
+        }
+
+        for (var i = 0; i < data.length; i++) {
+            var rowString = "<tr><td>"
+            rowString += data[i]["name"] + "</td><td>";
+            rowString += data[i]["url"] + "</td><td>";
+            rowString += data[i]["username"] + "</td><td>";
+            rowString += "<button type='button' class='btn btn-default' id='copyButton" + i + "'>Copy Password</button></td><td>";
+            rowString += "<button type='button' class='btn btn-default glyphicon glyphicon-pencil' id='editButton" + i + "'> </button></td><td>";
+            rowString += "<button type='button' class='btn btn-default glyphicon glyphicon-trash' id='delButton" + i + "'> </button></td>";
+            var rowToAdd = $(rowString);
+
+
+            $('#table').append(rowToAdd);
+        }
+
+        //$(function () {
+        //    $('#table').bootstrapTable({
+        //        data: data
+        //    });
+        //});
+
+        $('#addPassword').click(function() {
+            return addPw(pwdb, s);
+        });
     }
 }
 
@@ -111,6 +149,9 @@ function didntExist() {
         data: '{"name":"SCPS", "parent":{"id":"0"}}'
     }).complete(function (data) {
         var result = JSON.parse(data.responseText);
+        if (localStorage.getItem("box_scps_folder_id") != null) {
+            localStorage.setItem("box_scps_folder_id", null);
+        }
         localStorage.setItem("box_scps_folder_id", result.id);
 
         var blob = new Blob([shares[1]], {type: "text/plain;charset=utf-8"});
@@ -128,6 +169,9 @@ function didntExist() {
             data: form
         }).complete(function (data) {
             var result = JSON.parse(data.responseText);
+            if (localStorage.getItem("box_scps_share_file_id") != null) {
+                localStorage.setItem("box_Scps_share_file_id", null);
+            }
             localStorage.setItem("box_scps_share_file_id", result.entries[result.total_count - 1].id);
             // create empty pwdb
             var sql = window.SQL;

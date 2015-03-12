@@ -6,6 +6,8 @@
 function go_home() {
     chrome.tabs.create({
         url: "/html/home.html"
+    }, function(tab) {
+        localStorage.setItem("tab_id", tab.id);
     });
 }
 
@@ -18,8 +20,8 @@ function start_signout_process() {
     localStorage.setItem("got_here_from", "login");
     localStorage.setItem("box_access_token", null);
     localStorage.setItem("box_refresh_token", null);
-    localStorage.setItem("box_scps_folder_id", null);
-    localStorage.setItem("box_scps_share_file_id", null);
+    //chrome.tabs.remove(parseInt(localStorage.getItem("tab_id")));
+    ////localStorage.setItem("tab_id", null);
     //dbox_client.signOut(null, function() {
     //    window.close();
     //});

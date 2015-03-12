@@ -101,3 +101,15 @@
     margin-top: 10px;
     margin-left: 87px;
 }
+
+#addPassword {
+    float: right;
+}
+
+#table {
+    font-size: 18px;
+}
+
+#signout {
+    margin-top: 15px;
+}
