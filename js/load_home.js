@@ -23,33 +23,33 @@ function addPw(pwdb, s) {
     var formSelector = $('.form-add-entry');
     formSelector.css("display", "block");
     $('#pws-container').fadeOut(1);
-    formSelector.on('submit', function() {
-        //var addEntryStr = "INSERT OR REPLACE INTO Pws (id, name, url, username, password) VALUES (NULL, ";
+    formSelector.submit(function() {
+        event.preventDefault();
         var addEntryStr = "INSERT OR REPLACE INTO Pws VALUES (NULL, \"";
         addEntryStr += $('.form-add-entry input[name=name]').val() + "\", \"";
         addEntryStr += $('.form-add-entry input[name=url]').val() + "\", \"";
         addEntryStr += $('.form-add-entry input[name=user]').val() + "\", \"";
         addEntryStr += $('.form-add-entry input[name=pw]').val() + "\");";
-        pwdb.exec(addEntryStr);
-        var buf = String.fromCharCode.apply(null, pwdb.export());
-        var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([s[0], s[1]]));
-        dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
-            if (error) {
-                return console.log(error);
-            }
-            // FOR SOME REASON, NEED TO DO THIS IN ORDER FOR ROW TO SHOW UP
+        $.when(res = pwdb.exec(addEntryStr)).done(function() {
+            var buf = String.fromCharCode.apply(null, pwdb.export());
+            var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([s[0], s[1]]));
+            dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
+                if (error) {
+                    return console.log(error);
+                }
 
-
-            formSelector.css("display", "none");
-            $('#pws-container').fadeIn(1000);
-            //setTimeout(function() {
-            //    var blah = pwdb.exec("SELECT * FROM Pws");
-            //    console.log(blah);
-            //    return homeFree(pwdb, s);
-            //}, 3000);
-            //return homeFree(s);
+                formSelector.css("display", "none");
+                $('#pws-container').fadeIn(1000);
+                formSelector.each(function(){
+                    this.reset();
+                });
+                pwdb.close();
+                location.reload();
+            });
         });
+
     });
+
 }
 
 function editPw(pwdb, s, data, index) {
@@ -60,30 +60,33 @@ function editPw(pwdb, s, data, index) {
     $('.form-add-entry input[name=url]').val(data[index]["url"]);
     $('.form-add-entry input[name=user]').val(data[index]["username"]);
     $('.form-add-entry input[name=pw]').val(data[index]["pw"]);
-    formSelector.on('submit', function() {
-        //var addEntryStr = "INSERT OR REPLACE INTO Pws (id, name, url, username, password) VALUES (NULL, ";
+    formSelector.submit(function() {
+        event.preventDefault();
         var addEntryStr = "INSERT OR REPLACE INTO Pws VALUES (";
         addEntryStr += data[index]["id"] + ", \"";
         addEntryStr += $('.form-add-entry input[name=name]').val() + "\", \"";
         addEntryStr += $('.form-add-entry input[name=url]').val() + "\", \"";
         addEntryStr += $('.form-add-entry input[name=user]').val() + "\", \"";
         addEntryStr += $('.form-add-entry input[name=pw]').val() + "\");";
-        pwdb.exec(addEntryStr);
-        var buf = String.fromCharCode.apply(null, pwdb.export());
-        var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([s[0], s[1]]));
-        dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
-            if (error) {
-                return console.log(error);
-            }
-            // FOR SOME REASON, NEED TO DO THIS IN ORDER FOR ROW TO SHOW UP
-            //var blah = pwdb.exec("SELECT * FROM Pws");
+        $.when(res = pwdb.exec(addEntryStr)).done(function() {
+            var buf = String.fromCharCode.apply(null, pwdb.export());
+            var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([s[0], s[1]]));
+            dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
+                if (error) {
+                    return console.log(error);
+                }
 
-            formSelector.css("display", "none");
-            $('#pws-container').fadeIn(1000);
-            //setTimeout(function() {
-            //    return homeFree(s);
-            //}, 3000);
+                formSelector.css("display", "none");
+                $('#pws-container').fadeIn(1000);
+
+                formSelector.each(function(){
+                    this.reset();
+                });
+                pwdb.close();
+                location.reload();
+            });
         });
+
 
     });
 }
@@ -97,7 +100,8 @@ function deleteEntry(pwdb, s, data, index) {
         if (error) {
             return console.log(error);
         }
-        return homeFree(s);
+        pwdb.close();
+        location.reload();
     });
 }
 
@@ -127,8 +131,8 @@ function homeFree(s) {
         decDb = decDb.toString(CryptoJS.enc.Utf8);
         var buf = new ArrayBuffer(decDb.length*2); // 2 bytes for each char
         var bufView = new Uint16Array(buf);
-        for (var i=0, strLen=decDb.length; i<strLen; i++) {
-            bufView[i] = decDb.charCodeAt(i);
+        for (var j=0, strLen=decDb.length; j<strLen; j++) {
+            bufView[j] = decDb.charCodeAt(j);
         }
         var sql = window.SQL;
         var pwdb = new sql.Database(bufView);
@@ -139,15 +143,11 @@ function homeFree(s) {
             document.getElementById("noPws").style.display = "block";
 
             $('#getStarted').click(function() {
-                return addPw(pwdb, s);
+                addPw(pwdb, s);
             });
 
         } else {
             document.getElementById("Pws").style.display = "block";
-
-            // FOR SOME REASON, NEED TO DO THIS IN ORDER FOR ROW TO SHOW UP
-            var blah = pwdb.exec("SELECT * FROM Pws");
-            console.log(blah);
 
             var selectStmt = pwdb.prepare("SELECT * FROM Pws");
             var data = [];
@@ -178,7 +178,6 @@ function homeFree(s) {
                     var copyButtonStringId = "#copyButton" + i;
                     var editButtonStringId = "#editButton" + i;
                     var delButtonStringId = "#delButton" + i;
-                    //var textToCopy = data[i]["pw"];
 
                     $(copyButtonStringId).click(function() {
                         copyToClipboard(data[index]["pw"]);
@@ -189,10 +188,6 @@ function homeFree(s) {
                     });
 
                     $(delButtonStringId).click(function() {
-                        $('#table tbody tr').remove();
-                        var blankRowString = "<tr> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>";
-                        var blankRowToAdd = $(blankRowString);
-                        $('#table').append(blankRowToAdd);
                         deleteEntry(pwdb, s, data, index);
                     });
 
