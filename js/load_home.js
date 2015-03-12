@@ -16,7 +16,6 @@ function start_signout_process() {
         chrome.tabs.getCurrent(function(tab) {
             chrome.tabs.remove(tab.id);
         });
-        //window.close();
     });
 }
 
@@ -35,16 +34,20 @@ function addPw(pwdb, s) {
         var buf = String.fromCharCode.apply(null, pwdb.export());
         var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([s[0], s[1]]));
         dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
-        if (error) {
-            return console.log(error);
-        }
-        // FOR SOME REASON, NEED TO DO THIS IN ORDER FOR ROW TO SHOW UP
-        var blah = pwdb.exec("SELECT * FROM Pws");
-            //console.log(blah);
+            if (error) {
+                return console.log(error);
+            }
+            // FOR SOME REASON, NEED TO DO THIS IN ORDER FOR ROW TO SHOW UP
 
-        formSelector.css("display", "none");
-        $('#pws-container').fadeIn(1000);
-            return homeFree(pwdb, s);
+
+            formSelector.css("display", "none");
+            $('#pws-container').fadeIn(1000);
+            //setTimeout(function() {
+            //    var blah = pwdb.exec("SELECT * FROM Pws");
+            //    console.log(blah);
+            //    return homeFree(pwdb, s);
+            //}, 3000);
+            //return homeFree(s);
         });
     });
 }
@@ -73,11 +76,13 @@ function editPw(pwdb, s, data, index) {
                 return console.log(error);
             }
             // FOR SOME REASON, NEED TO DO THIS IN ORDER FOR ROW TO SHOW UP
-            var blah = pwdb.exec("SELECT * FROM Pws");
+            //var blah = pwdb.exec("SELECT * FROM Pws");
 
             formSelector.css("display", "none");
             $('#pws-container').fadeIn(1000);
-            return homeFree(pwdb, s);
+            //setTimeout(function() {
+            //    return homeFree(s);
+            //}, 3000);
         });
 
     });
@@ -92,7 +97,7 @@ function deleteEntry(pwdb, s, data, index) {
         if (error) {
             return console.log(error);
         }
-        return homeFree(pwdb, s);
+        return homeFree(s);
     });
 }
 
@@ -108,79 +113,99 @@ function copyToClipboard(text){
     document.body.removeChild(copyDiv);
 }
 
-function homeFree(pwdb, s) {
-    var numEntries = pwdb.exec("SELECT * FROM Pws").length;
+function homeFree(s) {
     document.getElementById("Pws").style.display = "none";
     document.getElementById("noPws").style.display = "none";
-    if (numEntries == 0) {
 
-        document.getElementById("noPws").style.display = "block";
+    dbox_client.readFile("encDB", null, function (error, dat) {
+        if (error) {
+            return didntExist();
+        }
 
-        $('#getStarted').click(function() {
-            return addPw(pwdb, s);
-        });
+        var decDb = CryptoJS.AES.decrypt(dat, secrets.combine([s[0], s[1]]));
 
-    } else {
-        document.getElementById("Pws").style.display = "block";
+        decDb = decDb.toString(CryptoJS.enc.Utf8);
+        var buf = new ArrayBuffer(decDb.length*2); // 2 bytes for each char
+        var bufView = new Uint16Array(buf);
+        for (var i=0, strLen=decDb.length; i<strLen; i++) {
+            bufView[i] = decDb.charCodeAt(i);
+        }
+        var sql = window.SQL;
+        var pwdb = new sql.Database(bufView);
 
-        // FOR SOME REASON, NEED TO DO THIS IN ORDER FOR ROW TO SHOW UP
-        var blah = pwdb.exec("SELECT * FROM Pws");
-        console.log(blah);
+        var numEntries = pwdb.exec("SELECT * FROM Pws").length;
+        if (numEntries == 0) {
 
-        var selectStmt = pwdb.prepare("SELECT * FROM Pws");
-        var data = [];
-        while (selectStmt.step()) {
-            var row = selectStmt.getAsObject();
-            data.push({
-                "name": row["name"],
-                "url":row["url"],
-                "username":row["username"],
-                "pw":row["password"],
-                "id":row["id"]
+            document.getElementById("noPws").style.display = "block";
+
+            $('#getStarted').click(function() {
+                return addPw(pwdb, s);
+            });
+
+        } else {
+            document.getElementById("Pws").style.display = "block";
+
+            // FOR SOME REASON, NEED TO DO THIS IN ORDER FOR ROW TO SHOW UP
+            var blah = pwdb.exec("SELECT * FROM Pws");
+            console.log(blah);
+
+            var selectStmt = pwdb.prepare("SELECT * FROM Pws");
+            var data = [];
+            while (selectStmt.step()) {
+                var row = selectStmt.getAsObject();
+                data.push({
+                    "name": row["name"],
+                    "url":row["url"],
+                    "username":row["username"],
+                    "pw":row["password"],
+                    "id":row["id"]
+                });
+            }
+
+            for (var i = 0; i < data.length; i++) {
+                (function() {
+                    const index = i;
+                    var rowString = "<tr><td>"
+                    rowString += data[i]["name"] + "</td><td>";
+                    rowString += data[i]["url"] + "</td><td>";
+                    rowString += data[i]["username"] + "</td><td>";
+                    rowString += "<button type='button' class='btn btn-default' id='copyButton" + i + "'>Copy Password</button></td><td>";
+                    rowString += "<button type='button' class='btn btn-default glyphicon glyphicon-pencil' id='editButton" + i + "'> </button></td><td>";
+                    rowString += "<button type='button' class='btn btn-default glyphicon glyphicon-trash' id='delButton" + i + "'> </button></td>";
+                    var rowToAdd = $(rowString);
+                    $('#table').append(rowToAdd);
+
+                    var copyButtonStringId = "#copyButton" + i;
+                    var editButtonStringId = "#editButton" + i;
+                    var delButtonStringId = "#delButton" + i;
+                    //var textToCopy = data[i]["pw"];
+
+                    $(copyButtonStringId).click(function() {
+                        copyToClipboard(data[index]["pw"]);
+                    });
+
+                    $(editButtonStringId).click(function() {
+                        editPw(pwdb, s, data, index);
+                    });
+
+                    $(delButtonStringId).click(function() {
+                        $('#table tbody tr').remove();
+                        var blankRowString = "<tr> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>";
+                        var blankRowToAdd = $(blankRowString);
+                        $('#table').append(blankRowToAdd);
+                        deleteEntry(pwdb, s, data, index);
+                    });
+
+                })();
+            }
+
+            $('#addPassword').click(function() {
+                addPw(pwdb, s);
             });
         }
 
-        for (var i = 0; i < data.length; i++) {
-            (function() {
-                const index = i;
-                var rowString = "<tr><td>"
-                rowString += data[i]["name"] + "</td><td>";
-                rowString += data[i]["url"] + "</td><td>";
-                rowString += data[i]["username"] + "</td><td>";
-                rowString += "<button type='button' class='btn btn-default' id='copyButton" + i + "'>Copy Password</button></td><td>";
-                rowString += "<button type='button' class='btn btn-default glyphicon glyphicon-pencil' id='editButton" + i + "'> </button></td><td>";
-                rowString += "<button type='button' class='btn btn-default glyphicon glyphicon-trash' id='delButton" + i + "'> </button></td>";
-                var rowToAdd = $(rowString);
-                $('#table').append(rowToAdd);
+    });
 
-                var copyButtonStringId = "#copyButton" + i;
-                var editButtonStringId = "#editButton" + i;
-                var delButtonStringId = "#delButton" + i;
-                //var textToCopy = data[i]["pw"];
-
-                $(copyButtonStringId).click(function() {
-                    copyToClipboard(data[index]["pw"]);
-                });
-
-                $(editButtonStringId).click(function() {
-                    editPw(pwdb, s, data, index);
-                });
-
-                $(delButtonStringId).click(function() {
-                    $('#table tbody tr').remove();
-                    var blankRowString = "<tr> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>";
-                    var blankRowToAdd = $(blankRowString);
-                    $('#table').append(blankRowToAdd);
-                    deleteEntry(pwdb, s, data, index);
-                });
-
-            })();
-        }
-
-        $('#addPassword').click(function() {
-            return addPw(pwdb, s);
-        });
-    }
 }
 
 function goHome(encryptedDb) {
@@ -205,16 +230,7 @@ function goHome(encryptedDb) {
             contentType: false
         }).complete(function(data) {
             s[1] = data.responseText;
-            var decDb = CryptoJS.AES.decrypt(encryptedDb, secrets.combine([s[0], s[1]]));
-            decDb = decDb.toString(CryptoJS.enc.Utf8);
-            var buf = new ArrayBuffer(decDb.length*2); // 2 bytes for each char
-            var bufView = new Uint16Array(buf);
-            for (var i=0, strLen=decDb.length; i<strLen; i++) {
-                bufView[i] = decDb.charCodeAt(i);
-            }
-            var sql = window.SQL;
-            var pwdb = new sql.Database(bufView);
-            return homeFree(pwdb, s);
+            return homeFree(s);
         });
     });
 }

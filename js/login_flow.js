@@ -10,10 +10,6 @@
 // each time log in, fetch db, store locally unencrypted, delete when log out
 // when make changes, replace cloud stored db and local with new copy
 
-//(function() {
-
-
-
     var GDRVIE_CLIENT_ID = '442923093210-o3kc4mvfqnh53cut30o67trg6icntvc9.apps.googleusercontent.com';
     var GDRIVE_SCOPES = 'https://www.googleapis.com/auth/drive';
     var GDRIVE_API_KEY = 'AIzaSyBBRU-UpTpyEWJkdfe1hx6n2tvNEEii9hk';
@@ -63,11 +59,6 @@
         checkSuccessful();
 
         if (localStorage.getItem("got_here_from") == "login") {
-            //chrome.runtime.getBackgroundPage(function(eventPage) {
-            //    eventPage.controller.dbox_chrome.auth();
-            //});
-            //localStorage.setItem("got_here_from", "dbox");
-            //localStorage.setItem("successful", parseInt(localStorage.getItem("successful")) + 1);
             dbox_auth_flow();
         }
 
@@ -83,5 +74,3 @@
             //alert("YAYAYAY");
         }
     }();
-
-//}.call(this));
