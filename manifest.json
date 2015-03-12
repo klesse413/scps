@@ -12,7 +12,8 @@
     "https://*.box.com/*",
     "https://*.boxcdn.com/*",
     "https://*.boxcdn.net/*",
-    "https://*.boxcloud.com/*"
+    "https://*.boxcloud.com/*",
+    "clipboardWrite"
   ],
 
   "background": {

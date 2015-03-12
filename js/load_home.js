@@ -3,13 +3,64 @@
  * since: 3/2/15
  */
 
+function start_signout_process() {
+    chrome.browserAction.setPopup({
+        popup: "/html/not_logged_in_popup.html"
+    });
+    localStorage.setItem("logged_in", 0);
+    localStorage.setItem("successful", 0);
+    localStorage.setItem("got_here_from", "login");
+    localStorage.setItem("box_access_token", null);
+    localStorage.setItem("box_refresh_token", null);
+    dbox_client.signOut(null, function() {
+        chrome.tabs.getCurrent(function(tab) {
+            chrome.tabs.remove(tab.id);
+        });
+        //window.close();
+    });
+}
+
 function addPw(pwdb, s) {
     var formSelector = $('.form-add-entry');
     formSelector.css("display", "block");
-    $('#pws-container').fadeOut(1000);
+    $('#pws-container').fadeOut(1);
     formSelector.on('submit', function() {
         //var addEntryStr = "INSERT OR REPLACE INTO Pws (id, name, url, username, password) VALUES (NULL, ";
         var addEntryStr = "INSERT OR REPLACE INTO Pws VALUES (NULL, \"";
+        addEntryStr += $('.form-add-entry input[name=name]').val() + "\", \"";
+        addEntryStr += $('.form-add-entry input[name=url]').val() + "\", \"";
+        addEntryStr += $('.form-add-entry input[name=user]').val() + "\", \"";
+        addEntryStr += $('.form-add-entry input[name=pw]').val() + "\");";
+        pwdb.exec(addEntryStr);
+        var buf = String.fromCharCode.apply(null, pwdb.export());
+        var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([s[0], s[1]]));
+        dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
+        if (error) {
+            return console.log(error);
+        }
+        // FOR SOME REASON, NEED TO DO THIS IN ORDER FOR ROW TO SHOW UP
+        var blah = pwdb.exec("SELECT * FROM Pws");
+            //console.log(blah);
+
+        formSelector.css("display", "none");
+        $('#pws-container').fadeIn(1000);
+            return homeFree(pwdb, s);
+        });
+    });
+}
+
+function editPw(pwdb, s, data, index) {
+    var formSelector = $('.form-add-entry');
+    formSelector.css("display", "block");
+    $('#pws-container').fadeOut(1);
+    $('.form-add-entry input[name=name]').val(data[index]["name"]);
+    $('.form-add-entry input[name=url]').val(data[index]["url"]);
+    $('.form-add-entry input[name=user]').val(data[index]["username"]);
+    $('.form-add-entry input[name=pw]').val(data[index]["pw"]);
+    formSelector.on('submit', function() {
+        //var addEntryStr = "INSERT OR REPLACE INTO Pws (id, name, url, username, password) VALUES (NULL, ";
+        var addEntryStr = "INSERT OR REPLACE INTO Pws VALUES (";
+        addEntryStr += data[index]["id"] + ", \"";
         addEntryStr += $('.form-add-entry input[name=name]').val() + "\", \"";
         addEntryStr += $('.form-add-entry input[name=url]').val() + "\", \"";
         addEntryStr += $('.form-add-entry input[name=user]').val() + "\", \"";
@@ -28,11 +79,39 @@ function addPw(pwdb, s) {
             $('#pws-container').fadeIn(1000);
             return homeFree(pwdb, s);
         });
+
     });
+}
+
+function deleteEntry(pwdb, s, data, index) {
+    var deleteString = "DELETE FROM Pws WHERE id=" + data[index]["id"] + ";";
+    pwdb.exec(deleteString);
+    var buf = String.fromCharCode.apply(null, pwdb.export());
+    var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([s[0], s[1]]));
+    dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
+        if (error) {
+            return console.log(error);
+        }
+        return homeFree(pwdb, s);
+    });
+}
+
+function copyToClipboard(text){
+    var copyDiv = document.createElement('div');
+    copyDiv.contentEditable = true;
+    document.body.appendChild(copyDiv);
+    copyDiv.innerHTML = text;
+    copyDiv.unselectable = "off";
+    copyDiv.focus();
+    document.execCommand('SelectAll');
+    document.execCommand("Copy", false, null);
+    document.body.removeChild(copyDiv);
 }
 
 function homeFree(pwdb, s) {
     var numEntries = pwdb.exec("SELECT * FROM Pws").length;
+    document.getElementById("Pws").style.display = "none";
+    document.getElementById("noPws").style.display = "none";
     if (numEntries == 0) {
 
         document.getElementById("noPws").style.display = "block";
@@ -44,6 +123,10 @@ function homeFree(pwdb, s) {
     } else {
         document.getElementById("Pws").style.display = "block";
 
+        // FOR SOME REASON, NEED TO DO THIS IN ORDER FOR ROW TO SHOW UP
+        var blah = pwdb.exec("SELECT * FROM Pws");
+        console.log(blah);
+
         var selectStmt = pwdb.prepare("SELECT * FROM Pws");
         var data = [];
         while (selectStmt.step()) {
@@ -51,29 +134,48 @@ function homeFree(pwdb, s) {
             data.push({
                 "name": row["name"],
                 "url":row["url"],
-                "username":row["username"]
+                "username":row["username"],
+                "pw":row["password"],
+                "id":row["id"]
             });
         }
 
         for (var i = 0; i < data.length; i++) {
-            var rowString = "<tr><td>"
-            rowString += data[i]["name"] + "</td><td>";
-            rowString += data[i]["url"] + "</td><td>";
-            rowString += data[i]["username"] + "</td><td>";
-            rowString += "<button type='button' class='btn btn-default' id='copyButton" + i + "'>Copy Password</button></td><td>";
-            rowString += "<button type='button' class='btn btn-default glyphicon glyphicon-pencil' id='editButton" + i + "'> </button></td><td>";
-            rowString += "<button type='button' class='btn btn-default glyphicon glyphicon-trash' id='delButton" + i + "'> </button></td>";
-            var rowToAdd = $(rowString);
+            (function() {
+                const index = i;
+                var rowString = "<tr><td>"
+                rowString += data[i]["name"] + "</td><td>";
+                rowString += data[i]["url"] + "</td><td>";
+                rowString += data[i]["username"] + "</td><td>";
+                rowString += "<button type='button' class='btn btn-default' id='copyButton" + i + "'>Copy Password</button></td><td>";
+                rowString += "<button type='button' class='btn btn-default glyphicon glyphicon-pencil' id='editButton" + i + "'> </button></td><td>";
+                rowString += "<button type='button' class='btn btn-default glyphicon glyphicon-trash' id='delButton" + i + "'> </button></td>";
+                var rowToAdd = $(rowString);
+                $('#table').append(rowToAdd);
 
+                var copyButtonStringId = "#copyButton" + i;
+                var editButtonStringId = "#editButton" + i;
+                var delButtonStringId = "#delButton" + i;
+                //var textToCopy = data[i]["pw"];
 
-            $('#table').append(rowToAdd);
+                $(copyButtonStringId).click(function() {
+                    copyToClipboard(data[index]["pw"]);
+                });
+
+                $(editButtonStringId).click(function() {
+                    editPw(pwdb, s, data, index);
+                });
+
+                $(delButtonStringId).click(function() {
+                    $('#table tbody tr').remove();
+                    var blankRowString = "<tr> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>";
+                    var blankRowToAdd = $(blankRowString);
+                    $('#table').append(blankRowToAdd);
+                    deleteEntry(pwdb, s, data, index);
+                });
+
+            })();
         }
-
-        //$(function () {
-        //    $('#table').bootstrapTable({
-        //        data: data
-        //    });
-        //});
 
         $('#addPassword').click(function() {
             return addPw(pwdb, s);
@@ -82,6 +184,9 @@ function homeFree(pwdb, s) {
 }
 
 function goHome(encryptedDb) {
+    $('#signout').click(function() {
+        start_signout_process();
+    });
     var s = [];
     dbox_client.readFile("share.txt", null, function (error, data) {
         if (error) {

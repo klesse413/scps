@@ -73,14 +73,24 @@
             <table data-toggle="table" id="table" class="table table-hover" >
                 <thead>
                 <tr>
-                    <th data-field="name">Name</th>
-                    <th data-field="url">URL</th>
-                    <th data-field="username">Username</th>
-                    <th></th> <!-- copy password to clipboard --->
-                    <th></th> <!-- edit entry --->
-                    <th></th> <!-- delete entry --->
+                    <th align="center" data-field="name">Name</th>
+                    <th align="center" data-field="url">URL</th>
+                    <th align="center" data-field="username">Username</th>
+                    <th align="center">Copy</th> <!-- copy password to clipboard --->
+                    <th align="center">Edit</th> <!-- edit entry --->
+                    <th align="center">Delete</th> <!-- delete entry --->
                 </tr>
                 </thead>
+                <tbody>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                </tbody>
             </table>
         </div>
     </div>
@@ -90,7 +100,7 @@
         <input type="text" class="input-block-level" name="url" placeholder="URL">
         <input type="text" class="input-block-level" name="user" placeholder="Username">
         <input type="text" class="input-block-level" name="pw" placeholder="Password">
-        <button id="addEntry" class="btn btn-outline-inverse btn-lg btn-default" type="submit" value="Submit">Add Entry</button>
+        <button id="addEntry" class="btn btn-outline-inverse btn-lg btn-default" type="submit" value="Submit">Submit</button>
     </form>
 
 

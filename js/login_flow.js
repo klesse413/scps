@@ -35,10 +35,10 @@
                 if (error) {
                     console.log(error);
                 } else  {
-
+                    localStorage.setItem("got_here_from", "dbox");
+                    localStorage.setItem("successful", parseInt(localStorage.getItem("successful")) + 1);
                 }
-                localStorage.setItem("got_here_from", "dbox");
-                localStorage.setItem("successful", parseInt(localStorage.getItem("successful")) + 1);
+
                 location.reload();
             });
         }
