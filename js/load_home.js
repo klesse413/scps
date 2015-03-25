@@ -7,11 +7,11 @@ function start_signout_process() {
     chrome.browserAction.setPopup({
         popup: "/html/not_logged_in_popup.html"
     });
-    localStorage.setItem("logged_in", 0);
-    localStorage.setItem("successful", 0);
-    localStorage.setItem("got_here_from", "login");
-    localStorage.setItem("box_access_token", null);
-    localStorage.setItem("box_refresh_token", null);
+    chrome.storage.local.set("logged_in", 0);
+    chrome.storage.local.set("successful", 0);
+    chrome.storage.local.set("got_here_from", "login");
+    chrome.storage.local.set("box_access_token", null);
+    chrome.storage.local.set("box_refresh_token", null);
     dbox_client.signOut(null, function() {
         chrome.tabs.getCurrent(function(tab) {
             chrome.tabs.remove(tab.id);
@@ -214,9 +214,9 @@ function goHome(encryptedDb) {
         }
         s[0] = data;
         var headers = {
-            Authorization: 'Bearer ' + localStorage.getItem("box_access_token")
+            Authorization: 'Bearer ' + chrome.storage.local.get("box_access_token")
         };
-        var downloadURL = "https://api.box.com/2.0/files/" + localStorage.getItem("box_scps_share_file_id") + "/content";
+        var downloadURL = "https://api.box.com/2.0/files/" + chrome.storage.local.get("box_scps_share_file_id") + "/content";
         $.ajax({
             url: downloadURL,
             headers: headers,
@@ -236,7 +236,7 @@ function goHome(encryptedDb) {
 //if yes then go home
 
 function didntExist() {
-    var shares = secrets.share(secrets.random(256), 2, 2);
+    var shares = secrets.share(secrets.random(256), 3, 3);
     // put one share on dbox
     dbox_client.writeFile("share.txt", shares[0], function(error, stat) {
         if (error) {
@@ -252,7 +252,7 @@ function didntExist() {
 
     // The Box OAuth 2 Header
     var headers = {
-        Authorization: 'Bearer ' + localStorage.getItem("box_access_token")
+        Authorization: 'Bearer ' + chrome.storage.local.get("box_access_token")
     };
 
     $.ajax({
@@ -265,15 +265,15 @@ function didntExist() {
         data: '{"name":"SCPS", "parent":{"id":"0"}}'
     }).complete(function (data) {
         var result = JSON.parse(data.responseText);
-        if (localStorage.getItem("box_scps_folder_id") != null) {
-            localStorage.setItem("box_scps_folder_id", null);
+        if (chrome.storage.local.get("box_scps_folder_id") != null) {
+            chrome.storage.local.set("box_scps_folder_id", null);
         }
-        localStorage.setItem("box_scps_folder_id", result.id);
+        chrome.storage.local.set("box_scps_folder_id", result.id);
 
         var blob = new Blob([shares[1]], {type: "text/plain;charset=utf-8"});
         var form = new FormData();
         form.append('file', blob);
-        form.append('attributes', '{"name": "share.txt", "parent":{"id":"' + localStorage.getItem("box_scps_folder_id") + '"}}');
+        form.append('attributes', '{"name": "share.txt", "parent":{"id":"' + chrome.storage.local.get("box_scps_folder_id") + '"}}');
 
         $.ajax({
             url: uploadUrl,
@@ -285,10 +285,27 @@ function didntExist() {
             data: form
         }).complete(function (data) {
             var result = JSON.parse(data.responseText);
-            if (localStorage.getItem("box_scps_share_file_id") != null) {
-                localStorage.setItem("box_Scps_share_file_id", null);
+            if (chrome.storage.local.get("box_scps_share_file_id") != null) {
+                chrome.storage.local.set("box_Scps_share_file_id", null);
             }
-            localStorage.setItem("box_scps_share_file_id", result.entries[result.total_count - 1].id);
+            chrome.storage.local.set("box_scps_share_file_id", result.entries[result.total_count - 1].id);
+
+            //var gdrive_url = "https://www.googleapis.com/drive/v2/files";
+            //var gdrive_headers = {
+            //    Authorization: 'Bearer ' + chrome.storage.local.get("gdrive_access_token")
+            //};
+            //
+            //$.ajax({
+            //    url: gdrive_url,
+            //    headers: gdrive_headers,
+            //    type: 'POST',
+            //    contentType: 'application/json',
+            //    data: '{"title":"SCPS", "mimeType": "application/vnd.google-apps.folder"}'
+            //}).complete(function (data) {
+            //
+            //});
+
+
             // create empty pwdb
             var sql = window.SQL;
             var pwdb = new sql.Database();
