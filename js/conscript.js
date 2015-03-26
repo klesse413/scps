@@ -14,11 +14,11 @@ $(window).load(function() {
             var access_token = hash.substring(start, end);
 
             // Store it
-            chrome.storage.local.set("odrive_access_token", access_token);
-            chrome.storage.local.set("got_here_from", "odrive");
-            chrome.storage.local.set("successful", parseInt(chrome.storage.local.get("successful")) + 1);
-
-            alert(chrome.storage.local.get("got_here_from"));
+            chrome.storage.local.set({"odrive_access_token": access_token});
+            chrome.storage.local.set({"got_here_from": "odrive"});
+            chrome.storage.local.get("successful", function(result) {
+                chrome.storage.local.set({"successful": parseInt(result.successful) + 1});
+            });
 
             // Close the window
             window.close();

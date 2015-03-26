@@ -7,11 +7,11 @@ function start_signout_process() {
     chrome.browserAction.setPopup({
         popup: "/html/not_logged_in_popup.html"
     });
-    chrome.storage.local.set("logged_in", 0);
-    chrome.storage.local.set("successful", 0);
-    chrome.storage.local.set("got_here_from", "login");
-    chrome.storage.local.set("box_access_token", null);
-    chrome.storage.local.set("box_refresh_token", null);
+    chrome.storage.local.set({"logged_in": 0});
+    chrome.storage.local.set({"successful": 0});
+    chrome.storage.local.set({"got_here_from": "login"});
+    chrome.storage.local.set({"box_access_token": null});
+    chrome.storage.local.set({"box_refresh_token": null});
     dbox_client.signOut(null, function() {
         chrome.tabs.getCurrent(function(tab) {
             chrome.tabs.remove(tab.id);
@@ -165,7 +165,7 @@ function homeFree(s) {
             for (var i = 0; i < data.length; i++) {
                 (function() {
                     const index = i;
-                    var rowString = "<tr><td>"
+                    var rowString = "<tr><td>";
                     rowString += data[i]["name"] + "</td><td>";
                     rowString += data[i]["url"] + "</td><td>";
                     rowString += data[i]["username"] + "</td><td>";
@@ -265,63 +265,66 @@ function didntExist() {
         data: '{"name":"SCPS", "parent":{"id":"0"}}'
     }).complete(function (data) {
         var result = JSON.parse(data.responseText);
-        if (chrome.storage.local.get("box_scps_folder_id") != null) {
-            chrome.storage.local.set("box_scps_folder_id", null);
-        }
-        chrome.storage.local.set("box_scps_folder_id", result.id);
-
-        var blob = new Blob([shares[1]], {type: "text/plain;charset=utf-8"});
-        var form = new FormData();
-        form.append('file', blob);
-        form.append('attributes', '{"name": "share.txt", "parent":{"id":"' + chrome.storage.local.get("box_scps_folder_id") + '"}}');
-
-        $.ajax({
-            url: uploadUrl,
-            headers: headers,
-            type: 'POST',
-            // This prevents JQuery from trying to append the form as a querystring
-            processData: false,
-            contentType: false,
-            data: form
-        }).complete(function (data) {
-            var result = JSON.parse(data.responseText);
-            if (chrome.storage.local.get("box_scps_share_file_id") != null) {
-                chrome.storage.local.set("box_Scps_share_file_id", null);
+        chrome.storage.local.get("box_scps_folder_id", function(res) {
+            if (res.box_scps_folder_id != null) {
+                chrome.storage.local.set({"box_scps_folder_id": null});
             }
-            chrome.storage.local.set("box_scps_share_file_id", result.entries[result.total_count - 1].id);
+            chrome.storage.local.set({"box_scps_folder_id": result.id});
 
-            //var gdrive_url = "https://www.googleapis.com/drive/v2/files";
-            //var gdrive_headers = {
-            //    Authorization: 'Bearer ' + chrome.storage.local.get("gdrive_access_token")
-            //};
-            //
-            //$.ajax({
-            //    url: gdrive_url,
-            //    headers: gdrive_headers,
-            //    type: 'POST',
-            //    contentType: 'application/json',
-            //    data: '{"title":"SCPS", "mimeType": "application/vnd.google-apps.folder"}'
-            //}).complete(function (data) {
-            //
-            //});
+            var blob = new Blob([shares[1]], {type: "text/plain;charset=utf-8"});
+            var form = new FormData();
+            form.append('file', blob);
+            form.append('attributes', '{"name": "share.txt", "parent":{"id":"' + result.id + '"}}');
+
+            $.ajax({
+                url: uploadUrl,
+                headers: headers,
+                type: 'POST',
+                // This prevents JQuery from trying to append the form as a querystring
+                processData: false,
+                contentType: false,
+                data: form
+            }).complete(function (data) {
+                var result = JSON.parse(data.responseText);
+                chrome.storage.local.get("box_Scps_share_file_id", function(res1) {
+                    if (res1.box_scps_share_file_id != null) {
+                        chrome.storage.local.set({"box_Scps_share_file_id": null});
+                    }
+                    chrome.storage.local.set({"box_scps_share_file_id": result.entries[result.total_count - 1].id});
+                });
+
+                //var gdrive_url = "https://www.googleapis.com/drive/v2/files";
+                //var gdrive_headers = {
+                //    Authorization: 'Bearer ' + chrome.storage.local.get("gdrive_access_token")
+                //};
+                //
+                //$.ajax({
+                //    url: gdrive_url,
+                //    headers: gdrive_headers,
+                //    type: 'POST',
+                //    contentType: 'application/json',
+                //    data: '{"title":"SCPS", "mimeType": "application/vnd.google-apps.folder"}'
+                //}).complete(function (data) {
+                //
+                //});
 
 
-            // create empty pwdb
-            var sql = window.SQL;
-            var pwdb = new sql.Database();
-            var sqlstr = "CREATE TABLE Pws(id INTEGER PRIMARY KEY, name varchar(255), url varchar(1000), username varchar(255), password varchar(255))";
-            pwdb.run(sqlstr);
-            var buf = String.fromCharCode.apply(null, pwdb.export());
-            //encrypt it, upload it
-            var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([shares[0], shares[1]]));
-            dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
-                if (error) {
-                    return console.log(error);
-                }
-                return goHome(encryptedDb);
+                // create empty pwdb
+                var sql = window.SQL;
+                var pwdb = new sql.Database();
+                var sqlstr = "CREATE TABLE Pws(id INTEGER PRIMARY KEY, name varchar(255), url varchar(1000), username varchar(255), password varchar(255))";
+                pwdb.run(sqlstr);
+                var buf = String.fromCharCode.apply(null, pwdb.export());
+                //encrypt it, upload it
+                var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([shares[0], shares[1]]));
+                dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
+                    if (error) {
+                        return console.log(error);
+                    }
+                    return goHome(encryptedDb);
+                });
             });
         });
-
     });
 }
 

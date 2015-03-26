@@ -32,13 +32,15 @@ var handleBoxReturn = function() {
 
     $.post(BOX_URL, url_with_params, function (data, textStatus) {
         if (data["access_token"] == null) {
-            chrome.storage.local.set("got_here_from", "box");
+            chrome.storage.local.set({"got_here_from": "box"});
             console.log("ERROR GETTING BOX TOKEN");
         } else {
-            chrome.storage.local.set("box_access_token", data["access_token"]);
-            chrome.storage.local.set("box_refresh_token", data["refresh_token"]);
-            chrome.storage.local.set("got_here_from", "box");
-            chrome.storage.local.set("successful", parseInt(chrome.storage.local.get("successful")) + 1);
+            chrome.storage.local.set({"box_access_token": data["access_token"]});
+            chrome.storage.local.set({"box_refresh_token": data["refresh_token"]});
+            chrome.storage.local.set({"got_here_from": "box"});
+            chrome.storage.local.get("successful", function(result) {
+                chrome.storage.local.set({"successful": parseInt(result.successful) + 1});
+            });
         }
         window.location.replace("/html/redirect.html");
     }, "json");

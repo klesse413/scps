@@ -21,9 +21,8 @@ var BOX_REDIRECT_URI = "chrome-extension://nkdgoofbfnpedcmcamfkcdhocfgdmjgj/html
 
 
 
-window.addEventListener('storage', function(event) {
-    alert("hi");
-    alert(event);
+chrome.storage.onChanged.addListener(function(changes, areaName) {
+    alert(changes);
 });
 
 
@@ -52,8 +51,10 @@ function dbox_auth_flow() {
             if (error) {
                 console.log(error);
             } else  {
-                chrome.storage.local.set("got_here_from", "dbox");
-                chrome.storage.local.set("successful", parseInt(chrome.storage.local.get("successful")) + 1);
+                chrome.storage.local.set({"got_here_from": "dbox"});
+                chrome.storage.local.get("successful", function(result) {
+                    chrome.storage.local.set({"successful": parseInt(result.successful) + 1});
+                });
             }
 
             location.reload();
@@ -63,31 +64,27 @@ function dbox_auth_flow() {
 
 var t = 3;
 
-var checkSuccessful = function() {
-    console.log(chrome.storage.local.get("got_here_from"));
-    console.log(chrome.storage.local.get("successful"));
-    if (chrome.storage.local.get("successful") >= t) {
-        chrome.storage.local.set("logged_in", 1);
-        chrome.browserAction.setPopup({
-            popup: "/html/logged_in_popup.html"
-        });
-        window.location.replace("/html/home.html");
-    }
-};
-
 var flow = function() {
 
-    checkSuccessful();
+    // check enough successful
+    chrome.storage.local.get("successful", function(result) {
+        if (result.successful >= t) {
+            chrome.storage.local.set({"logged_in":1});
+            chrome.browserAction.setPopup({
+                popup: "/html/logged_in_popup.html"
+            });
+            window.location.replace("/html/home.html");
+        }
 
-    if (chrome.storage.local.get("got_here_from") == "login") {
-        dbox_auth_flow();
-    }
-
-    if (chrome.storage.local.get("got_here_from") == "dbox") {
-        box_auth_flow();
-    }
-
-    if (chrome.storage.local.get("got_here_from") == "box") {
-        odrive_auth_flow();
-    }
+        // if not enough successful yet, try next one
+        chrome.storage.local.get("got_here_from", function(result) {
+            if (result.got_here_from == "login") {
+                dbox_auth_flow();
+            } else if (result.got_here_from == "dbox") {
+                box_auth_flow();
+            } else if (result.got_here_from == "box") {
+                odrive_auth_flow();
+            }
+        });
+    });
 }();
