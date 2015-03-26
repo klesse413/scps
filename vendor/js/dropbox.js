@@ -341,7 +341,7 @@
                 this.scope = 'default';
             }
             this.storageKey = null;
-            this.storage = Dropbox.AuthDriver.BrowserBase.chrome.storage.local();
+            this.storage = Dropbox.AuthDriver.BrowserBase.localStorage();
             this.stateRe = /^[^#]+\#(.*&)?state=([^&]+)(&|$)/;
         }
 
@@ -393,7 +393,7 @@
             var jsonString, name, storageError, value;
             jsonString = JSON.stringify(credentials);
             try {
-                this.storage.set(this.storageKey, jsonString);
+                this.storage.setItem(this.storageKey, jsonString);
             } catch (_error) {
                 storageError = _error;
                 name = encodeURIComponent(this.storageKey);
@@ -407,7 +407,7 @@
         BrowserBase.prototype.loadCredentials = function(callback) {
             var cookieRegexp, jsonError, jsonString, match, name, nameRegexp, storageError;
             try {
-                jsonString = this.storage.get(this.storageKey);
+                jsonString = this.storage.getItem(this.storageKey);
             } catch (_error) {
                 storageError = _error;
                 jsonString = null;
@@ -472,11 +472,11 @@
             return fragments.join('/');
         };
 
-        BrowserBase.chrome.storage.local = function() {
+        BrowserBase.localStorage = function() {
             var deprecationError;
             if (typeof window !== 'undefined') {
                 try {
-                    return window.chrome.storage.local;
+                    return window.localStorage;
                 } catch (_error) {
                     deprecationError = _error;
                     return null;

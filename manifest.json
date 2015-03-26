@@ -30,14 +30,6 @@
       "default_icon": "images/icon128.png"
   },
 
-  "content_scripts": [
-    {
-      "matches": ["*://*/*"],
-      "js": ["vendor/js/jquery-1.11.2.min.js", "js/conscript.js"],
-      "run_at" : "document_end"
-    }
-  ],
-
   "icons": {
     "16": "images/icon16.png",
     "48": "images/icon48.png",
@@ -49,5 +41,5 @@
     "html/box_oauth_receiver.html"
   ],
 
-  "content_security_policy": "script-src 'self' https://js.live.net 'unsafe-eval'; object-src 'self'"
+  "content_security_policy": "script-src 'self' https://apis.google.com 'unsafe-eval'; object-src 'self'"
 }
