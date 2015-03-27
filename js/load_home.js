@@ -23,13 +23,11 @@ function start_signout_process() {
 }
 
 function addPw(s) {
-    console.log("beg of addpw");
     var formSelector = $('.form-add-entry');
     formSelector.css("display", "block");
     $('#pws-container').fadeOut(1);
     formSelector.unbind('submit').bind('submit', function() {
         event.preventDefault();
-        console.log("beg of submit");
         var addEntryStr = "INSERT OR REPLACE INTO Pws VALUES (NULL, \"";
         addEntryStr += $('.form-add-entry input[name=name]').val() + "\", \"";
         addEntryStr += $('.form-add-entry input[name=url]').val() + "\", \"";
@@ -116,7 +114,6 @@ function homeFree(s) {
     document.getElementById("noPws").style.display = "none";
 
     var currentEntries = pwdb.exec("SELECT * FROM Pws");
-    console.log(currentEntries);
     var numEntries = currentEntries.length;
     if (numEntries == 0) {
 
