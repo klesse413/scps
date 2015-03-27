@@ -121,7 +121,7 @@ function homeFree(s) {
     document.getElementById("Pws").style.display = "none";
     document.getElementById("noPws").style.display = "none";
 
-    dbox_client.readFile("encDB", null, function (error, dat) {
+    dbox_client.readFile("encDB", function (error, dat) {
         if (error) {
             return didntExist();
         }
@@ -204,9 +204,6 @@ function homeFree(s) {
 }
 
 function goHome(encryptedDb) {
-    $('#signout').click(function() {
-        start_signout_process();
-    });
     var s = [];
     dbox_client.readFile("share.txt", null, function (error, data) {
         if (error) {
@@ -230,13 +227,11 @@ function goHome(encryptedDb) {
     });
 }
 
-//check if db file exists in dbox
-    // in future, if not, check if exists in box or whichever other backup
-// if not then generate key and create it
-//if yes then go home
-
 function didntExist() {
+
+    // create shares
     var shares = secrets.share(secrets.random(256), 2, 2);
+
     // put one share on dbox
     dbox_client.writeFile("share.txt", shares[0], function(error, stat) {
         if (error) {
@@ -244,17 +239,12 @@ function didntExist() {
         }
     });
 
-    // first need to create folder in box
+    // create folder in box
     var folderUrl = "https://api.box.com/2.0/folders";
-
-    // put one share on box
     var uploadUrl = 'https://upload.box.com/api/2.0/files/content';
-
-    // The Box OAuth 2 Header
     var headers = {
         Authorization: 'Bearer ' + localStorage.getItem("box_access_token")
     };
-
     $.ajax({
         url: folderUrl,
         headers: headers,
@@ -270,16 +260,16 @@ function didntExist() {
         }
         localStorage.setItem("box_scps_folder_id", result.id);
 
+
+        // next, store share on box in folder created
         var blob = new Blob([shares[1]], {type: "text/plain;charset=utf-8"});
         var form = new FormData();
         form.append('file', blob);
         form.append('attributes', '{"name": "share.txt", "parent":{"id":"' + localStorage.getItem("box_scps_folder_id") + '"}}');
-
         $.ajax({
             url: uploadUrl,
             headers: headers,
             type: 'POST',
-            // This prevents JQuery from trying to append the form as a querystring
             processData: false,
             contentType: false,
             data: form
@@ -289,13 +279,17 @@ function didntExist() {
                 localStorage.setItem("box_Scps_share_file_id", null);
             }
             localStorage.setItem("box_scps_share_file_id", result.entries[result.total_count - 1].id);
-            // create empty pwdb
+
+
+            // next, create empty pwdb
             var sql = window.SQL;
             var pwdb = new sql.Database();
             var sqlstr = "CREATE TABLE Pws(id INTEGER PRIMARY KEY, name varchar(255), url varchar(1000), username varchar(255), password varchar(255))";
             pwdb.run(sqlstr);
             var buf = String.fromCharCode.apply(null, pwdb.export());
-            //encrypt it, upload it
+
+
+            //encrypt it, upload it to dbox
             var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([shares[0], shares[1]]));
             dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
                 if (error) {
@@ -308,16 +302,44 @@ function didntExist() {
     });
 }
 
+$('#signout').click(function() {
+    start_signout_process();
+});
+
 if (!dbox_client.isAuthenticated()) {
     dbox_client.authenticate(function (error) {
         if (error) {
             console.log(error);
+            return;
         }
-        dbox_client.readFile("encDB", null, function (error, data) {
+        // check if encrypted db in dropbox SCPS folder
+        dbox_client.readdir("/", function(error, entries) {
             if (error) {
-                return didntExist();
+                console.log(error);
+                return;
             }
-            return goHome(data);
+            if (entries.length == 0) {
+                return didntExist();
+            } else {
+                var hasDb = false;
+                for (var i = 0; i < entries.length; i++) {
+                    if (entries[i] == "encDB") {
+                        hasDb = true;
+                        break;
+                    }
+                }
+                if (!hasDb) {
+                    return didntExist();
+                } else {
+                    dbox_client.readFile("encDB", function (error, data) {
+                        if (error) {
+                            console.log(error);
+                            return;
+                        }
+                        return goHome(data);
+                    });
+                }
+            }
         });
     });
 }
