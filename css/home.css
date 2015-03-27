@@ -3,6 +3,10 @@
     color: #616161;
 }
 
+#loading {
+    text-align: center;
+}
+
 #pws-container {
     width: 100%;
     height: 100%;

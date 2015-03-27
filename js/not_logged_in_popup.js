@@ -14,16 +14,16 @@ function start_login_process() {
 function init() {
     var login_button = document.getElementById("login");
 
-    if(login_button.addEventListener){
+    if (login_button.addEventListener) {
         login_button.addEventListener("click", start_login_process, false);
-    } else if(login_button.attachEvent){
+    } else if(login_button.attachEvent) {
         login_button.attachEvent("onclick", start_login_process);
     }
 }
 
-if(window.addEventListener) {
+if (window.addEventListener) {
     window.addEventListener("load", init, false);
-} else if(window.attachEvent) {
+} else if (window.attachEvent) {
     window.attachEvent("onload", init);
 } else {
     document.addEventListener("load", init, false);

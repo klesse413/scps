@@ -19,7 +19,7 @@ function dbox_auth_flow() {
         dbox_client.authenticate(function (error) {
             if (error) {
                 console.log(error);
-            } else  {
+            } else {
                 localStorage.setItem("got_here_from", "dbox");
                 localStorage.setItem("successful", parseInt(localStorage.getItem("successful")) + 1);
             }
@@ -43,15 +43,17 @@ var checkSuccessful = function() {
     }
 };
 
-var flow = function() {
+(function() {
 
     checkSuccessful();
 
-    if (localStorage.getItem("got_here_from") == "login") {
+    if (localStorage.getItem("got_here_from") === "login") {
         dbox_auth_flow();
-    } else if (localStorage.getItem("got_here_from") == "dbox") {
+        checkSuccessful();
+    } else if (localStorage.getItem("got_here_from") === "dbox") {
         box_auth_flow();
-    } else if (localStorage.getItem("got_here_from") == "box") {
-
+        checkSuccessful();
+    } else if (localStorage.getItem("got_here_from") === "box") {
+        checkSuccessful();
     }
-}();
+}());
