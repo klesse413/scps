@@ -190,6 +190,7 @@ function goHome(encryptedDb) {
             Authorization: 'Bearer ' + localStorage.getItem("box_access_token")
         };
         var downloadURL = "https://api.box.com/2.0/files/" + localStorage.getItem("box_scps_share_file_id") + "/content";
+        document.getElementById('loadingHeader').innerHTML = "Communicating with Box...";
         $.ajax({
             url: downloadURL,
             headers: headers,
@@ -197,6 +198,7 @@ function goHome(encryptedDb) {
             processData: false,
             contentType: false
         }).done(function(data) {
+            document.getElementById('loadingHeader').innerHTML = "Loading your passwords...";
             s[1] = data;
             var decDb = CryptoJS.AES.decrypt(encryptedDb, secrets.combine([s[0], s[1]]));
             decDb = decDb.toString(CryptoJS.enc.Utf8);
