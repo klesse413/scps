@@ -29,7 +29,7 @@ function dbox_auth_flow() {
 }
 
 // eventually, have user choose n and t on signup - for now both are 2
-var t = 2;
+var t = 3;
 
 var checkSuccessful = function() {
     console.log(localStorage.getItem("got_here_from"));
@@ -43,17 +43,18 @@ var checkSuccessful = function() {
     }
 };
 
-(function() {
+checkSuccessful();
 
-    checkSuccessful();
-
-    if (localStorage.getItem("got_here_from") === "login") {
-        dbox_auth_flow();
-        checkSuccessful();
-    } else if (localStorage.getItem("got_here_from") === "dbox") {
-        box_auth_flow();
-        checkSuccessful();
-    } else if (localStorage.getItem("got_here_from") === "box") {
-        checkSuccessful();
-    }
-}());
+if (localStorage.getItem("got_here_from") === "login") {
+    dbox_auth_flow();
+    //checkSuccessful();
+} else if (localStorage.getItem("got_here_from") === "dbox") {
+    box_auth_flow();
+    //checkSuccessful();
+} else if (localStorage.getItem("got_here_from") === "box") {
+    //handleGdriveAuth();
+    window.location.replace("/html/gdrive_redirect.html");
+}
+//} else if (localStorage.getItem("got_here_from") == "gdrive") {
+//    checkSuccessful();
+//}

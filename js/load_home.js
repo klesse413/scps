@@ -4,6 +4,8 @@
  */
 
 var pwdb;
+var GDRIVE_CLIENT_ID = "442923093210-o3kc4mvfqnh53cut30o67trg6icntvc9.apps.googleusercontent.com";
+var GDRIVE_SCOPES = "https://www.googleapis.com/auth/drive";
 
 function start_signout_process() {
     chrome.browserAction.setPopup({
@@ -15,11 +17,13 @@ function start_signout_process() {
     localStorage.setItem("box_access_token", null);
     localStorage.setItem("box_refresh_token", null);
     pwdb.close();
-    dbox_client.signOut(null, function() {
-        chrome.tabs.getCurrent(function(tab) {
-            chrome.tabs.remove(tab.id);
+    if (dbox_client.isAuthenticated()) {
+        dbox_client.signOut(null, function () {
+            chrome.tabs.getCurrent(function (tab) {
+                chrome.tabs.remove(tab.id);
+            });
         });
-    });
+    }
 }
 
 function addPw(s) {
@@ -198,20 +202,52 @@ function goHome(encryptedDb) {
             processData: false,
             contentType: false
         }).done(function(data) {
-            document.getElementById('loadingHeader').innerHTML = "Loading your passwords...";
             s[1] = data;
-            var decDb = CryptoJS.AES.decrypt(encryptedDb, secrets.combine([s[0], s[1]]));
-            decDb = decDb.toString(CryptoJS.enc.Utf8);
-            var buf = new ArrayBuffer(decDb.length*2); // 2 bytes for each char
-            var bufView = new Uint16Array(buf);
-            for (var j=0, strLen=decDb.length; j<strLen; j++) {
-                bufView[j] = decDb.charCodeAt(j);
-            }
-            var sql = window.SQL;
-            pwdb = new sql.Database(bufView);
+            document.getElementById('loadingHeader').innerHTML = "Communicating with Google Drive...";
+            window.setTimeout(gapi.auth.authorize({client_id: GDRIVE_CLIENT_ID, scope: GDRIVE_SCOPES, immediate: true}, function(authResult) {
+                gapi.client.load('drive', 'v2', function() {
+                var request = gapi.client.request({
+                    'path': '/drive/v2/files',
+                    'method': 'GET',
+                    'title': "share.txt",
+                    'parents': [{"id":localStorage.getItem("gdrive_scps_share_folder_id")}]
+                });
+                //var request = gapi.client.drive.files.get({
+                //    'title': "share.txt",
+                //    'parents': [{"id":localStorage.getItem("gdrive_scps_share_folder_id")}]
+                //});
+                request.execute(function(file) {
+                    console.log(file);
+                    if (file.downloadUrl) {
+                        var accessToken = gapi.auth.getToken().access_token;
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('GET', file.downloadUrl);
+                        xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+                        xhr.onload = function() {
+                            s[2] = xhr.responseText;
+                            document.getElementById('loadingHeader').innerHTML = "Loading your passwords...";
+                            var decDb = CryptoJS.AES.decrypt(encryptedDb, secrets.combine([s[0], s[1], s[2]]));
+                            decDb = decDb.toString(CryptoJS.enc.Utf8);
+                            var buf = new ArrayBuffer(decDb.length*2); // 2 bytes for each char
+                            var bufView = new Uint16Array(buf);
+                            for (var j=0, strLen=decDb.length; j<strLen; j++) {
+                                bufView[j] = decDb.charCodeAt(j);
+                            }
+                            var sql = window.SQL;
+                            pwdb = new sql.Database(bufView);
 
-            homeFree(s);
-
+                            homeFree(s);
+                        };
+                        xhr.onerror = function() {
+                            console.log("couldnt download share from gdrive");
+                        };
+                        xhr.send();
+                    } else {
+                        console.log("couldnt download share from gdrive");
+                    }
+                });
+                });
+            }), 1);
         }).fail(function() {
             localStorage.setItem("logged_in", 0);
             localStorage.setItem("successful", 0);
@@ -226,7 +262,7 @@ function goHome(encryptedDb) {
 function didntExist() {
 
     // create shares
-    var shares = secrets.share(secrets.random(256), 2, 2);
+    var shares = secrets.share(secrets.random(256), 3, 3);
 
     // put one share on dbox
     dbox_client.writeFile("share.txt", shares[0], function(error, stat) {
@@ -276,23 +312,87 @@ function didntExist() {
             }
             localStorage.setItem("box_scps_share_file_id", data.entries[data.total_count - 1].id);
 
+            // next, handle gdrive
+            window.setTimeout(gapi.auth.authorize({client_id: GDRIVE_CLIENT_ID, scope: GDRIVE_SCOPES, immediate: true}, function(authResult) {
+                gapi.client.load('drive', 'v2', function() {
+                    console.log("got here");
+                if (!authResult.error) {
+                    gapi.client.drive.files.insert({
+                            'resource':{
+                                "title":'SCPS',
+                                "mimeType": "application/vnd.google-apps.folder"
+                            }});
+                    gapi.client.drive.files.list(
+                        {q:"mimeType = 'application/vnd.google-apps.folder' and trashed = false and title = 'SCPS"}
+                    ).then(function(files){
+                            var directory=files.result.items;
 
-            // next, create empty pwdb
-            var sql = window.SQL;
-            pwdb = new sql.Database();
-            var sqlstr = "CREATE TABLE Pws(id INTEGER PRIMARY KEY, name varchar(255), url varchar(1000), username varchar(255), password varchar(255))";
-            pwdb.run(sqlstr);
-            var buf = String.fromCharCode.apply(null, pwdb.export());
+                            if(!directory.length){
+                                console.log("didn't create folder");
+                            } else {
+                                localStorage.setItem("gdrive_scps_folder_id", directory[0]);
+                            }
+                        });
+                    const boundary = '-------314159265358979323846';
+                    const delimiter = "\r\n--" + boundary + "\r\n";
+                    const close_delim = "\r\n--" + boundary + "--";
+                    var fileData = new File([shares[2]], "share.txt", {type: "text/plain"});
+
+                    var reader = new FileReader();
+                    reader.readAsBinaryString(fileData);
+                    reader.onload = function(e) {
+                        var contentType = fileData.type || 'application/octet-stream';
+                        var metadata = {
+                            'title': "share.txt",
+                            'mimeType': contentType,
+                            'parents': [{"id":localStorage.getItem("gdrive_scps_share_folder_id")}]
+                        };
+
+                        var base64Data = btoa(reader.result);
+                        var multipartRequestBody =
+                            delimiter +
+                            'Content-Type: application/json\r\n\r\n' +
+                            JSON.stringify(metadata) +
+                            delimiter +
+                            'Content-Type: ' + contentType + '\r\n' +
+                            'Content-Transfer-Encoding: base64\r\n' +
+                            '\r\n' +
+                            base64Data +
+                            close_delim;
+
+                        var request = gapi.client.request({
+                            'path': '/upload/drive/v2/files',
+                            'method': 'POST',
+                            'params': {'uploadType': 'multipart'},
+                            'headers': {
+                                'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+                            },
+                            'body': multipartRequestBody});
+
+                        request.execute(function() {
+                            // next, create empty pwdb
+                            var sql = window.SQL;
+                            pwdb = new sql.Database();
+                            var sqlstr = "CREATE TABLE Pws(id INTEGER PRIMARY KEY, name varchar(255), url varchar(1000), username varchar(255), password varchar(255))";
+                            pwdb.run(sqlstr);
+                            var buf = String.fromCharCode.apply(null, pwdb.export());
 
 
-            //encrypt it, upload it to dbox
-            var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([shares[0], shares[1]]));
-            dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
-                if (error) {
-                    return console.log(error);
+                            //encrypt it, upload it to dbox
+                            var encryptedDb = CryptoJS.AES.encrypt(buf, secrets.combine([shares[0], shares[1]]));
+                            dbox_client.writeFile("encDB", encryptedDb, function(error, stat) {
+                                if (error) {
+                                    return console.log(error);
+                                }
+                                homeFree(shares);
+                            });
+                        });
+                    }
+                } else {
+                    console.log("authResult error");
                 }
-                homeFree(shares);
-            });
+                });
+            }), 1);
         });
 
     });
@@ -304,11 +404,6 @@ if (!dbox_client.isAuthenticated()) {
             console.log(error);
             return;
         }
-
-        $('#signout').click(function() {
-            start_signout_process();
-        });
-
         // check if encrypted db in dropbox SCPS folder
         dbox_client.readdir("/", function(error, entries) {
             if (error) {
