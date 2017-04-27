@@ -3,9 +3,7 @@
  * since: 2/9/15
  */
 
-var BOX_CLIENT_ID = "n89fxun73qyutlvr40ex0xhicbpsube5";
 var BOX_URL = "https://app.box.com/api/oauth2/authorize";
-var BOX_REDIRECT_URI = "chrome-extension://nkdgoofbfnpedcmcamfkcdhocfgdmjgj/html/box_oauth_receiver.html";
 
 function box_auth_flow() {
 

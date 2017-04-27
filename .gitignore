@@ -1,2 +1,7 @@
 .idea
 notes.txt
+/vendor/.DS_Store
+/vendor/bootstrap
+*.swp
+.DS_Store
+js/constants.js

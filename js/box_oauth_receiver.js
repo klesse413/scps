@@ -4,9 +4,6 @@
  */
 
 var BOX_URL = "https://app.box.com/api/oauth2/token";
-var BOX_CLIENT_ID = "n89fxun73qyutlvr40ex0xhicbpsube5";
-var BOX_CLIENT_SECRET = "CFvqJwUXZ8yXVKbIhVoUPoYx3A2lgoIG";
-//var BOX_REDIRECT_URI = "chrome-extension://nkdgoofbfnpedcmcamfkcdhocfgdmjgj/html/redirect.html";
 
 
 
