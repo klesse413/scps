@@ -74,8 +74,8 @@ MIT license) API, secrets.js (https://github.com/amper5and/secrets.js).
 
 ### Generating key and encrypting password database
 
-The first step is to generate the 256 bit encryption key with 
-	
+The first step is to generate the 256 bit encryption key with
+
 	var key = secrets.random(256);
 
 Next, when a user adds or updates passwords, the new password database is
@@ -91,9 +91,14 @@ The key is split and distributed amongst the user's authenticated cloud storage 
 
 ### Retrieval of key and password database
 
-First, the shares from at least t cloud storage services must be retrieved, and the polynomial reconstructed to obtain the original encryption key. Next, the password database is retrieved from Dropbox (or Google Drive in the event that Dropbox is down), and decrypted using 
+First, the shares from at least t cloud storage services must be retrieved, and the polynomial reconstructed to obtain the original encryption key. Next, the password database is retrieved from Dropbox (or Google Drive in the event that Dropbox is down), and decrypted using
 
 	CryptoJS.AES.decrypt(encryptedMessage, key);
+
+Usage
+-----
+
+Add a constants.js file to the js directory containing constants such as `DROPBOX_KEY`, `BOX_CLIENT_ID`, `BOX_CLIENT_SECRET`, `BOX_REDIRECT_URI`
 
 Contact
 -------
@@ -101,3 +106,5 @@ Contact
 Katelyn Lesse
 
 klesse413@gmail.com
+
+This project is licensed under the terms of the MIT license.
